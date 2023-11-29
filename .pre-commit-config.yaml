@@ -25,3 +25,4 @@ repos:
             args:
                 - --max-line-length=88
                 - -j 0
+                - --verbose
