@@ -71,6 +71,10 @@ date_to_int(date_to_convert, reference)
 int_to_date(int_to_convert, reference=None)
     Convert an integer (number of days) to a datetime date
     using the specified reference date
+
+get_dtm_values(parcel_os_code, app_config)
+    Query the DTM database based on longitude and latitude to
+    retrieve elevation, slope and aspect
 """
 
 import re
@@ -78,6 +82,7 @@ import math
 from math import exp, log, cos, sin, acos, asin, tan, floor
 from math import degrees as deg, radians as rad
 from datetime import date, datetime, time, timedelta
+import psycopg2
 from pyproj import Transformer
 
 
@@ -683,3 +688,57 @@ def int_to_date(int_to_convert, reference=None):
     date_obj = reference + timedelta(days=int_to_convert)
 
     return date_obj
+
+
+def get_dtm_values(parcel_os_code, app_config):
+    """
+    Query the DTM database based on longitude and latitude to retrieve
+    elevation, slope and aspect data.
+    The output of this function is a dictionary with the following keys:
+    'x', 'y', 'elevation', 'slope', 'aspect'
+    """
+    # pylint: disable=R0914
+    db_name = app_config.dem_parameters["db_name"]
+    db_user = app_config.dem_parameters["username"]
+    db_password = app_config.dem_parameters["password"]
+
+    conn = None
+
+    # retrieve lon, lat from parcel_os_code and create a bounding box to
+    # find the closest 50m grid cell in the DEM
+    lon, lat = osgrid2lonlat(parcel_os_code)
+    lon_min, lon_max, lat_min, lat_max = lon - 50, lon + 50, lat - 50, lat + 50
+    try:
+        conn = psycopg2.connect(
+            user=db_user,
+            password=db_password,
+            database=db_name,
+            host="127.0.0.1",
+            port="5432",
+        )
+        conn.autocommit = True
+        cur = conn.cursor()
+        sql = f"""
+            SELECT terrain.x, terrain.y, terrain.val, terrain.slope, terrain.aspect
+            FROM dtm.dtm_slope_aspect AS terrain
+            WHERE terrain.x BETWEEN {lon_min} AND {lon_max}
+            AND terrain.y BETWEEN {lat_min} AND {lat_max};
+        """
+        cur.execute(sql)
+        sql_return = cur.fetchall()
+        lon_lst = [x[0] for x in sql_return]
+        lat_lst = [x[1] for x in sql_return]
+        closest_lon, closest_lat = nearest(lon, lon_lst), nearest(lat, lat_lst)
+        ind = [
+            i for i, x in enumerate(sql_return) if x[0:2] == (closest_lon, closest_lat)
+        ]
+        dtm_vals = sql_return[ind[0]]
+        dict_keys = ["x", "y", "elevation", "slope", "aspect"]
+        dtm_dict = dtm_dict = dict(zip(dict_keys, dtm_vals))
+        return dtm_dict
+    except psycopg2.DatabaseError as error:
+        print(error)
+        return None
+    finally:
+        if conn is not None:
+            conn.close()
