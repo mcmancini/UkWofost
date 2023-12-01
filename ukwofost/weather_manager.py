@@ -110,7 +110,7 @@ class NetCDFWeatherDataProvider(WeatherDataProvider):
         self.osgrid_10km = osgrid_code[0:2].upper() + os_digits_10k
         # pylint: disable=E1101
         self.nc_fname = (
-            app_config.data_dirs["osgb_dir"]
+            app_config.data_dirs["climate_dir"]
             + f"{self.osgrid_10km.upper()}_{rcp}_{ensemble:02d}.nc"
         )
         self.rcp, self.ensemble = rcp, ensemble
