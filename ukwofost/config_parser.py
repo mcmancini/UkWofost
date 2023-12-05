@@ -10,10 +10,11 @@ of the WOFOST crop yield model
 import configparser
 import json
 import os
+import yaml
 
 
 # pylint: disable=R0903
-class AppConfig:
+class ConfigReader:
     """
     Class to parse and format a configuration file containing all
     the necessary parameters setting the database on fertilisation
@@ -34,6 +35,8 @@ class AppConfig:
             self._parse_ini_config(config_file_path)
         elif file_extension == ".json":
             self._parse_json_config(config_file_path)
+        elif file_extension == ".yaml":
+            self._parse_yaml_config(config_file_path)
         else:
             raise ValueError("Unsupported file format")
 
@@ -59,6 +62,16 @@ class AppConfig:
         with open(config_file_path, "r", encoding="utf-8") as json_file:
             json_data = json.load(json_file)
         for key, value in json_data.items():
+            setattr(self, key, value)
+
+    def _parse_yaml_config(self, config_file_path):
+        """
+        Parse items from a .yaml config file
+        :param config_file_path: The path of the .yaml configuration file
+        """
+        with open(config_file_path, "r", encoding="utf-8") as file:
+            yaml_data = yaml.safe_load(file)
+        for key, value in yaml_data.items():
             setattr(self, key, value)
 
     def __str__(self):
