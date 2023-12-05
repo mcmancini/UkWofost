@@ -83,14 +83,23 @@ dependencies:
   - zstd=1.5.5=h12be248_0
   - pip:
       - charset-normalizer==3.3.2
+      - contourpy==1.2.0
+      - cycler==0.12.1
       - decorator==5.1.1
       - et-xmlfile==1.1.0
+      - fonttools==4.46.0
       - greenlet==3.0.1
       - idna==3.6
       - ipython-genutils==0.2.0
+      - kiwisolver==1.4.5
+      - matplotlib==3.8.2
       - openpyxl==3.1.2
       - pcse==5.5.5
+      - pillow==10.1.0
+      - pyparsing==3.1.1
       - requests==2.31.0
+      - rosetta-soil==0.1.1
+      - soiltexture==1.0.4
       - sqlalchemy==1.4.50
       - traitlets-pcse==5.0.0.dev0
       - urllib3==2.1.0
