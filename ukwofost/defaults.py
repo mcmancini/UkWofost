@@ -19,7 +19,7 @@ SOILSOURCE = "SoilGrids"
 
 # CROP PARAMETERS
 # pylint: disable=E1101
-cropd = YAMLCropDataProvider(app_config.data_dirs["CROP_DIR"], force_reload=True)
+cropd = YAMLCropDataProvider(app_config.data_dirs["crop_dir"], force_reload=True)
 
 # SITE PARAMETERS
 sitedata = WOFOST80SiteDataProvider(
@@ -37,5 +37,14 @@ crop. These can be overwritten to adapt agromanagement to the user's
 needs
 """
 managment_dir = app_config.data_dirs["management_dir"]
-default_managment = ConfigReader(managment_dir + "\\crop_management.yaml")
+managment = ConfigReader(managment_dir + "crop_management.yaml")
 # pylint: enable=E1101
+
+defaults = {
+    "rcp": RCP,
+    "ensemble": ENSEMBLE,
+    "soilsource": SOILSOURCE,
+    "cropd": cropd,
+    "sitedata": sitedata,
+    "managment": managment,
+}
