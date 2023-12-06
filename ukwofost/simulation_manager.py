@@ -242,15 +242,10 @@ class WofostSimulator:
             return summary_output[0]["WeightHARV"]
 
         wofsim = Wofost72_WLP_FD(parameters, self.wdp, crop_rotation)
+        wofsim.run_till_terminate()
         # Collect output
         summary_output = wofsim.get_summary_output()
-        # full_output = pd.DataFrame(wofsim.get_output())
-        # full_output = full_output.set_index("day")
-        output_dict = {
-            "DOM": summary_output[0]["DOM"],
-            "TWSO": summary_output[0]["TWSO"],
-        }
-        return output_dict
+        return summary_output[0]["TWSO"]
         # pylint: enable=R0914
 
     def _override_defaults(self, default_parameters, item):
