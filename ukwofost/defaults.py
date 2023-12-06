@@ -23,8 +23,14 @@ cropd = YAMLCropDataProvider(app_config.data_dirs["crop_dir"], force_reload=True
 
 # SITE PARAMETERS
 sitedata = WOFOST80SiteDataProvider(
-    WAV=100, CO2=360, NAVAILI=80, PAVAILI=10, KAVAILI=20
+    WAV=100,
+    CO2=360,
+    NAVAILI=80,
+    PAVAILI=10,
+    KAVAILI=20,
 )
+
+sitedata["TemperatureSoilinit"] = 5.0
 
 
 """
@@ -36,8 +42,8 @@ They are contained in a yaml file with default variables for each
 crop. These can be overwritten to adapt agromanagement to the user's
 needs
 """
-managment_dir = app_config.data_dirs["management_dir"]
-managment = ConfigReader(managment_dir + "crop_management.yaml")
+management_dir = app_config.data_dirs["management_dir"]
+management = ConfigReader(management_dir + "crop_management.yaml")
 # pylint: enable=E1101
 
 defaults = {
@@ -46,5 +52,5 @@ defaults = {
     "soilsource": SOILSOURCE,
     "cropd": cropd,
     "sitedata": sitedata,
-    "managment": managment,
+    "management": management,
 }
