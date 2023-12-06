@@ -24,6 +24,12 @@ class ConfigReader:
     def __init__(self, config_file_path):
         self._get_config(config_file_path)
 
+    def get(self, value):
+        """
+        Method to retrieve any value from an instance of the ConfigReader object
+        """
+        return getattr(self, value, {})
+
     def _get_config(self, config_file_path):
         """
         Parse items from the config file (INI or JSON)
