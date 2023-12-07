@@ -17,4 +17,4 @@ class Crops(Enum):
     POTATO = "potato"
     BARLEY = "barley"
     RAPESEED = "rapeseed"
-    GRASS = "ryegrass"
+    GRASS = "rye_grass"
