@@ -27,22 +27,11 @@ To run the tool you'll need:
 - And [`Conda`](https://docs.conda.io/en/latest/), a packaging and dependency manager.
 
 ### Installation
-To install, clone the repository using git
-```console 
-git clone git@github.com:mcmancini/UkWofost.git
-```
+
 ## Usage
 
 ## Details
 
 ### Modules
-1. [`Core`](./ukwofost/core)
-2. [`Utilities`](./ukwofost/utilities)
 
 ### Types
-| Type | Description |
-| :--- | :--- |
-| [`Farmer`](./netzero/core/farmer.py) | Farmer related attributes and methods. |
-| [`Farm`](./netzero/core/farm.py) | Captures lists of parcels and activities. |
-| [`Parcel`](./netzero/core/parcel.py) | Parcel related attributes, including id and area. |
-
