@@ -35,7 +35,7 @@ class Crop:
         but not for 'fallow' crop. The variety name must match
         the varieties included in the parametrised WOFOST crops.
     - Optional **kwargs:
-    : param 'apply_npk': a dictionary of dictionaries containing
+    : param 'apply_npk': a list of dictionaries containing
             fertilisation events defined as follows:
             kwargs['apply_npk'] = [npk_1, ...] where
             npk_1 = {
