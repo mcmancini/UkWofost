@@ -18,3 +18,7 @@ class Crops(Enum):
     BARLEY = "barley"
     RAPESEED = "rapeseed"
     GRASS = "rye_grass"
+    SORGHUM = "sorghum"
+    SOYBEAN = "soybean"
+    SUNFLOWER = "sunflower"
+    MAIZE = "maize"
