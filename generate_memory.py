@@ -3,8 +3,8 @@
 # Mattia Mancini (m.c.mancini@exeter.ac.uk), December 2023
 # =========================================================
 """
-get_wofost_yields.py
-====================
+generate_memory.py
+==================
 This script allows to build and update the memory of crop yields for
 any farmer defined in the NetZero+ farm model.
 
