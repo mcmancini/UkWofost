@@ -12,7 +12,8 @@ space
 from pcse.base import ParameterProvider
 
 # from pcse.models import Wofost80_NWLP_FD_beta
-from pcse.models import Wofost72_WLP_FD, LINGRA_WLP_FD
+# from pcse.models import Wofost72_WLP_FD, LINGRA_WLP_FD
+from pcse.models import Wofost80_NWLP_FD_beta, LINGRA_WLP_FD
 from ukwofost.crop_manager import CropRotation
 from ukwofost.defaults import defaults
 from ukwofost.weather_manager import NetCDFWeatherDataProvider
@@ -234,14 +235,14 @@ class WofostSimulator:
         crop_rotation = CropRotation(crop_instance).rotation
 
         # Run the model
-        # wofsim = Wofost80_NWLP_FD_beta(parameters, self.wdp, crop_rotation)
         if crop_instance.crop_type == "grass":
             wofsim = LINGRA_WLP_FD(parameters, self.wdp, crop_rotation)
             wofsim.run_till_terminate()
             summary_output = wofsim.get_summary_output()
             return summary_output[0]["WeightHARV"]
 
-        wofsim = Wofost72_WLP_FD(parameters, self.wdp, crop_rotation)
+        # wofsim = Wofost72_WLP_FD(parameters, self.wdp, crop_rotation)
+        wofsim = Wofost80_NWLP_FD_beta(parameters, self.wdp, crop_rotation)
         wofsim.run_till_terminate()
         # Collect output
         summary_output = wofsim.get_summary_output()
