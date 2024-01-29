@@ -9,12 +9,13 @@ based on a selected sampling strategy for the input parameter
 space
 """
 
+import pandas as pd
 from pcse.base import ParameterProvider
 
 # from pcse.models import Wofost80_NWLP_FD_beta
 # from pcse.models import Wofost72_WLP_FD, LINGRA_WLP_FD
 from pcse.models import Wofost80_NWLP_FD_beta, LINGRA_WLP_FD
-from ukwofost.crop_manager import CropRotation
+from ukwofost.crop_manager import Crop, CropRotation
 from ukwofost.defaults import defaults
 from ukwofost.weather_manager import NetCDFWeatherDataProvider
 from ukwofost.utils import osgrid2lonlat
@@ -207,12 +208,12 @@ class WofostSimulator:
         # cropd
         self.cropd = defaults.get("cropd")
 
-    def run(self, crop_instance, **kwargs):
+    def run(self, crop_or_rotation, **kwargs):
         """
         Method to run Wofost for the crop specified in 'crop' and
         with default crop parameters unless custom parameters are
         specified in **kwargs
-        :param crop: an instance of the class 'Crop'
+        :param crop_or_rotation: an instance of the class 'Crop'
                (see crop_manager.py for more info)
         :param **kwargs: optional dictionary with key-value pairs
                for any of the parameters that need to be customised:
@@ -222,32 +223,60 @@ class WofostSimulator:
                modified when initialising the instance of the class 'Crop'
                which is then passed to this method
         """
-        self.cropd.set_active_crop(crop_instance.crop, crop_instance.variety)
+        if isinstance(crop_or_rotation, Crop):
+            self.cropd.set_active_crop(crop_or_rotation.crop, crop_or_rotation.variety)
 
-        # COMBINE ALL PARAMETERS
-        parameters = ParameterProvider(
-            cropdata=self.cropd, soildata=self.soildata, sitedata=self.sitedata
-        )
+            # COMBINE ALL PARAMETERS
+            parameters = ParameterProvider(
+                cropdata=self.cropd, soildata=self.soildata, sitedata=self.sitedata
+            )
 
-        self._override_defaults(parameters, kwargs)
+            self._override_defaults(parameters, kwargs)
 
-        # generate agromanagement
-        crop_rotation = CropRotation(crop_instance).rotation
+            # generate agromanagement
+            crop_rotation = CropRotation(crop_or_rotation).rotation
 
-        # Run the model
-        if crop_instance.crop_type == "grass":
-            wofsim = LINGRA_WLP_FD(parameters, self.wdp, crop_rotation)
+            # Run the model
+            if crop_or_rotation.crop_type == "grass":
+                wofsim = LINGRA_WLP_FD(parameters, self.wdp, crop_rotation)
+                wofsim.run_till_terminate()
+                summary_output = wofsim.get_summary_output()
+                return summary_output[0]["WeightHARV"]
+
+            # wofsim = Wofost72_WLP_FD(parameters, self.wdp, crop_rotation)
+            wofsim = Wofost80_NWLP_FD_beta(parameters, self.wdp, crop_rotation)
             wofsim.run_till_terminate()
+            # Collect output
             summary_output = wofsim.get_summary_output()
-            return summary_output[0]["WeightHARV"]
+            return summary_output[0]["TWSO"]
+            # pylint: enable=R0914
 
-        # wofsim = Wofost72_WLP_FD(parameters, self.wdp, crop_rotation)
-        wofsim = Wofost80_NWLP_FD_beta(parameters, self.wdp, crop_rotation)
-        wofsim.run_till_terminate()
-        # Collect output
-        summary_output = wofsim.get_summary_output()
-        return summary_output[0]["TWSO"]
-        # pylint: enable=R0914
+        if isinstance(crop_or_rotation, CropRotation):
+            agromanagement = crop_or_rotation.rotation
+            crop_name = next(iter(crop_or_rotation.crop_list[0]))
+            crop_variety = crop_or_rotation.crop_list[0][crop_name]
+            # crop_start_date = crop_or_rotation.find_value("crop_start_date")
+            self.cropd.set_active_crop(crop_name, crop_variety)
+            parameters = ParameterProvider(
+                cropdata=self.cropd, soildata=self.soildata, sitedata=self.sitedata
+            )
+            wofsim = Wofost80_NWLP_FD_beta(parameters, self.wdp, agromanagement)
+            try:
+                wofsim.run_till_terminate()
+            # pylint: disable=W0718
+            except Exception as e:
+                print(
+                    f"failed to run the WOFOST crop yield model for "
+                    f"rotation '{crop_or_rotation}'"
+                    f" due to {e}"
+                )
+            # pylint: enable=W0718
+            output = wofsim.get_output()
+
+            df = pd.DataFrame(output)
+            df.set_index("day", inplace=True, drop=True)
+            return df
+        raise ValueError(f"Unsupported type: {type(crop_or_rotation)}")
 
     def _override_defaults(self, default_parameters, item):
         """
