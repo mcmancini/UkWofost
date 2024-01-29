@@ -8,6 +8,7 @@ agromanagment. This could be a standard agromanagement (contained
 in a yaml file to be parsed with the ConfigReader in config_parser.py)
 """
 import datetime as dt
+import pandas as pd
 import yaml
 
 
@@ -329,3 +330,173 @@ class CropRotation:
         msg += "======================================================\n\n"
         msg += self.yaml_rotation
         return msg
+
+
+# pylint: disable = R0903
+class CropBuilder:
+    """
+    Class generating the parameter data and dictionaries required
+    to build crops with their associated custom agromanagement
+    which are then passed to the WofostSimulator as individual
+    crops or rotations of crops (see Crop and CropRotation classes).
+    This class is used in bulk_wofost_simulator.py to overwrite
+    default parameters for crops based on sampling of the input
+    parameter space in order to build emulators of crops or crop
+    rotations. The list of these samples of the input parameter
+    space is contained into a csv file which needs to be read and
+    passed to this CropBuilder class. Each row of the csv file
+    represents a crop with associated custom agromanagment.
+    ---------------------------------------------------------------
+    Required input parameters for initialisation:
+    :param sampler_data: a pandas series which represents a row
+            in a csv file containing samples of the input parameter
+            space of Wofost for emulation purposes.
+            An example is provided below:
+            >>> sample_runs
+            crop_start_date          05/10/2020
+            WAV                       56.174135
+            NAVAILI                    84.95786
+            PAVAILI                    84.95786
+            KAVAILI                    84.95786
+            N_1                       87.335858
+            N_2                       103.80282
+            N_3                      128.306186
+            P_1                       87.335858
+            P_2                       103.80282
+            P_3                      128.306186
+            K_1                       87.335858
+            K_2                       103.80282
+            K_3                      128.306186
+            NPK_T1                   20/02/2021
+            NPK_T2                   05/03/2021
+            NPK_T3                   20/04/2021
+            lon                       -3.700497
+            lat                       50.238797
+            crop                          wheat
+            variety            Winter_wheat_106
+            year                           2020
+            name                     rotation_1
+            Name: 0, dtype: object
+
+    Output:
+    calendar_year, crop, **kwargs
+
+    Public methods defined here:
+
+    __str__(self, /)
+        Return str(self).
+    """
+
+    crop_parameters = set(
+        [
+            "variety",
+            "crop_start_date",
+            "crop_end_type",
+            "max_duration",
+        ]
+    )
+
+    default_values = {"crop_end_type": "maturity", "max_duration": 365}
+
+    def __init__(self, sampler_data):
+        self.calendar_year = self._find_year(sampler_data)
+        self.crop = self._find_crop(sampler_data)
+        self.crop_parameters = self._generate_args(sampler_data)
+
+    def _generate_args(self, sample):
+        """
+        Take pandas series of user-defined crop parameters
+        and build the correct parameter structure to be used
+        to generate instances of the Crop class. This method
+        builds the **kwargs argument to instantiate an object
+        of the Crop class.
+        Input arguments:
+        :param sample: A pandas series containing various
+            parameters including management data (e.g.,
+            fertilisation)
+        Output:
+        A dictionary of parameters (see docs for the class
+        "Crop" for more information on optional parameters)
+        """
+
+        # generate required crop parameters
+        crop_params = self.default_values.copy()
+        for param in self.crop_parameters:
+            if param in sample.index and pd.notna(sample[param]):
+                if param == "crop_start_date":
+                    datetime_obj = pd.to_datetime(sample[param], dayfirst=True)
+                    crop_params[param] = datetime_obj.date()
+                else:
+                    crop_params[param] = sample[param]
+
+        # generate fertilisation structure if present
+        num_nutrients = sum(sample.index.str.match(r"NPK_T\d+"))
+        num_fertilisations = sum(sample.index.str.match(r"N_\d+"))
+
+        if num_nutrients != num_fertilisations:
+            raise ValueError(
+                "The number of nutrients and fertilizations must be equal."
+            )
+
+        if num_fertilisations > 0:
+            apply_npk = []
+            for i in range(1, num_fertilisations + 1):
+                if (
+                    pd.notna(sample[f"N_{i}"])
+                    and pd.notna(sample[f"P_{i}"])
+                    and pd.notna(sample[f"K_{i}"])
+                    and pd.notna(sample[f"NPK_T{i}"])
+                ):
+                    npk_i = {
+                        "month": pd.to_datetime(
+                            sample[f"NPK_T{i}"], format="%d/%m/%Y"
+                        ).month,
+                        "day": pd.to_datetime(
+                            sample[f"NPK_T{i}"], format="%d/%m/%Y"
+                        ).day,
+                        "N_amount": sample[f"N_{i}"],
+                        "P_amount": sample[f"P_{i}"],
+                        "K_amount": sample[f"K_{i}"],
+                    }
+                    apply_npk.append(npk_i)
+            crop_params["apply_npk"] = apply_npk
+        return crop_params
+
+    def _find_year(self, sample):
+        """
+        Find calendar year from pandas series of user-defined
+        crop parameters
+        """
+        if "year" not in sample:
+            raise ValueError("Year missing. Please provide a value")
+        return sample["year"]
+
+    def _find_crop(self, sample):
+        """
+        Find crop from pandas series of user-defined
+        crop parameters
+        """
+        if "crop" not in sample:
+            raise ValueError("Crop missing. Please provide a value")
+        return sample["crop"]
+
+    def __str__(self):
+        msg = "==========================================================\n"
+        msg += "               Crop Builder characteristics\n"
+        msg += "------------------------Description----------------------\n"
+        msg += (
+            "Crop builder for crop '"
+            + self.crop
+            + "' in "
+            + str(self.calendar_year)
+            + "\n"
+        )
+        msg += "The following parameters have been modified from defaults\n"
+
+        for param in self.crop_parameters:
+            msg += f"- {param}\n"
+
+        return msg
+
+
+# pylint: enable = R0903
