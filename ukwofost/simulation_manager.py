@@ -234,7 +234,7 @@ class WofostSimulator:
             self._override_defaults(parameters, kwargs)
 
             # generate agromanagement
-            crop_rotation = CropRotation(crop_or_rotation).rotation
+            crop_rotation = CropRotation([crop_or_rotation]).rotation
 
             # Run the model
             if crop_or_rotation.crop_type == "grass":
