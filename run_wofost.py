@@ -26,23 +26,29 @@ of the Crop class is instantiated (line 45). More information on
 agromanagment can be found at https://tinyurl.com/bdcmj5b7
 """
 
-from ukwofost.crop_manager import Crop
+from ukwofost.crop_manager import Crop, CropRotation
 from ukwofost.defaults import defaults
 from ukwofost.simulation_manager import WofostSimulator
 from ukwofost.utils import lonlat2osgrid
 
 # Define input parameters
 LON, LAT = -3.4111140552800747, 57.13317708272391
-CROP = "rapeseed"
-YEAR = 2020
+CROPS = ["wheat", "fallow", "potato"]
+YEARS = [2020, 2021, 2022]
 
 # Build Wofost simulator
 os_code = lonlat2osgrid((LON, LAT), 10)
 sim = WofostSimulator(os_code)
 
 # Define management
-crop_params = defaults.get("management").get(CROP)
-crop = Crop(YEAR, CROP, **crop_params)
+rotation = []
+for item in zip(CROPS, YEARS):
+    crop = item[0]
+    year = item[1]
+    crop_params = defaults.get("management").get(crop)
+    rotation.append(Crop(calendar_year=year, crop=crop, **crop_params))
 
+crop_rotation = CropRotation(rotation)
 # Run WOFOST to compute crop yield
-crop_yield = sim.run(crop)
+crop_yield = sim.run(crop_rotation)
+print(crop_yield)

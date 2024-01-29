@@ -99,39 +99,28 @@ class Crop:
             self.variety = None
 
         # Start of the crop
-        if self.crop.lower() != "fallow":
-            if "crop_start_date" not in args:
-                if "crop_start_month" not in args and "crop_start_day" not in args:
-                    raise ValueError(
-                        f"Please provide a crop start date for {self.crop} as "
-                        f"kwargs['crop_start_day'] and kwargs['crop_start_month'] or "
-                        f"kwargs['crop_start_date']"
-                    )
-                start_crop_calendar = dt.date(
-                    self.calendar_year, args["crop_start_month"], 1
+        if "crop_start_date" not in args:
+            if "crop_start_month" not in args and "crop_start_day" not in args:
+                raise ValueError(
+                    f"Please provide a crop start date for {self.crop} as "
+                    f"kwargs['crop_start_day'] and kwargs['crop_start_month'] or "
+                    f"kwargs['crop_start_date']"
                 )
-                crop_start_date = dt.date(
-                    self.calendar_year,
-                    args["crop_start_month"],
-                    args["crop_start_day"],
-                )
-                args["start_crop_calendar"] = start_crop_calendar
-                args["crop_start_date"] = crop_start_date
-            else:
-                crop_start_date = args["crop_start_date"]
-                args["start_crop_calendar"] = dt.date(
-                    crop_start_date.year, crop_start_date.month, 1
-                )
+            start_crop_calendar = dt.date(
+                self.calendar_year, args["crop_start_month"], 1
+            )
+            crop_start_date = dt.date(
+                self.calendar_year,
+                args["crop_start_month"],
+                args["crop_start_day"],
+            )
+            args["start_crop_calendar"] = start_crop_calendar
+            args["crop_start_date"] = crop_start_date
         else:
-            if "start_crop_calendar" not in args:
-                if "crop_start_month" not in args and "crop_start_day" not in args:
-                    raise ValueError(
-                        "Please provide a calendar start date for 'fallow' as "
-                        "kwargs['start_crop_calendar'] or kwargs['crop_start_day'] "
-                        "and kwargs['crop_start_month']"
-                    )
-            else:
-                args["crop_start_date"] = "None"
+            crop_start_date = args["crop_start_date"]
+            args["start_crop_calendar"] = dt.date(
+                crop_start_date.year, crop_start_date.month, 1
+            )
 
         event_types = {
             "apply_npk": {
@@ -273,13 +262,13 @@ class CropRotation:
     from a succession of crops and/or grasses
     --------------------------------------------------------
     The required parameters are as follows:
-    : param crop: a succession of instances of the class
+    : param crop: a list of instances of the class
             'Crop' with associated agromanagemnets and
             timings. Rotations do not have a limit in the
             number of crops that they can contain.
     """
 
-    def __init__(self, *crops):
+    def __init__(self, crops):
         self.rotation = yaml.safe_load(self._generate_rotation(crops))
         self.crop_list = self._list_crops()
         self.yaml_rotation = self._generate_rotation(crops)
