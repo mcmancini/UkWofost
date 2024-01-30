@@ -16,7 +16,7 @@ from pcse.base import ParameterProvider
 # from pcse.models import Wofost72_WLP_FD, LINGRA_WLP_FD
 from pcse.models import Wofost80_NWLP_FD_beta, LINGRA_WLP_FD
 from ukwofost.crop_manager import Crop, CropRotation
-from ukwofost.defaults import defaults
+from ukwofost.defaults import defaults, wofost_parameters
 from ukwofost.weather_manager import NetCDFWeatherDataProvider
 from ukwofost.utils import osgrid2lonlat
 from ukwofost.soil_manager import SoilGridsDataProvider
@@ -57,138 +57,7 @@ class WofostSimulator:
     _DEFAULT_RCP = defaults["rcp"]
     _DEFAULT_ENSEMBLE = defaults["ensemble"]
 
-    wofost_params = set(
-        [
-            "AMAXTB",
-            "BG_K_SUPPLY",
-            "BG_N_SUPPLY",
-            "BG_P_SUPPLY",
-            "CFET",
-            "CO2",
-            "CO2AMAXTB",
-            "CO2EFFTB",
-            "CO2TRATB",
-            "CONTAB",
-            "CRAIRC",
-            "CVL",
-            "CVO",
-            "CVR",
-            "CVS",
-            "DEFLIM",
-            "DEPNR",
-            "DLC",
-            "DLO",
-            "DTSMTB",
-            "DVSEND",
-            "DVSI",
-            "DVS_NPK_STOP",
-            "DVS_NPK_TRANSL",
-            "EFFTB",
-            "FLTB",
-            "FOTB",
-            "FRTB",
-            "FSTB",
-            "IAIRDU",
-            "IDSL",
-            "IFUNRN",
-            "IOX",
-            "K0",
-            "KAVAILI",
-            "KCRIT_FR",
-            "KDIFTB",
-            "KMAXLV_TB",
-            "KMAXRT_FR",
-            "KMAXSO",
-            "KMAXST_FR",
-            "KRESIDLV",
-            "KRESIDRT",
-            "KRESIDST",
-            "KSOILBASE",
-            "KSOILBASE_FR",
-            "KSUB",
-            "NAVAILI",
-            "NCRIT_FR",
-            "NFIX_FR",
-            "NLAI_NPK",
-            "NLUE_NPK",
-            "NMAXLV_TB",
-            "NMAXRT_FR",
-            "NMAXSO",
-            "NMAXST_FR",
-            "NOTINF",
-            "NPART",
-            "NPK_TRANSLRT_FR",
-            "NRESIDLV",
-            "NRESIDRT",
-            "NRESIDST",
-            "NSLA_NPK",
-            "NSOILBASE",
-            "NSOILBASE_FR",
-            "PAVAILI",
-            "PCRIT_FR",
-            "PERDL",
-            "PMAXLV_TB",
-            "PMAXRT_FR",
-            "PMAXSO",
-            "PMAXST_FR",
-            "PRESIDLV",
-            "PRESIDRT",
-            "PRESIDST",
-            "PSOILBASE",
-            "PSOILBASE_FR",
-            "Q10",
-            "RDI",
-            "RDMCR",
-            "RDMSOL",
-            "RDRLV_NPK",
-            "RDRRTB",
-            "RDRSTB",
-            "RFSETB",
-            "RGRLAI",
-            "RKUPTAKEMAX",
-            "RML",
-            "RMO",
-            "RMR",
-            "RMS",
-            "RNUPTAKEMAX",
-            "RPUPTAKEMAX",
-            "RRI",
-            "SLATB",
-            "SM0",
-            "SMFCF",
-            "SMLIM",
-            "SMTAB",
-            "SMW",
-            "SOLNAM",
-            "SOPE",
-            "SPA",
-            "SPADS",
-            "SPAN",
-            "SPASS",
-            "SPODS",
-            "SPOSS",
-            "SSATB",
-            "SSI",
-            "SSMAX",
-            "TBASE",
-            "TBASEM",
-            "TCKT",
-            "TCNT",
-            "TCPT",
-            "TDWI",
-            "TEFFMX",
-            "TMNFTB",
-            "TMPFTB",
-            "TSUM1",
-            "TSUM2",
-            "TSUMEM",
-            "VERNBASE",
-            "VERNDVS",
-            "VERNRTB",
-            "VERNSAT",
-            "WAV",
-        ]
-    )
+    wofost_params = wofost_parameters
 
     def __init__(self, parcel_id, **kwargs):
         self.lon, self.lat = osgrid2lonlat(parcel_id, epsg=4236)
@@ -255,11 +124,14 @@ class WofostSimulator:
             agromanagement = crop_or_rotation.rotation
             crop_name = next(iter(crop_or_rotation.crop_list[0]))
             crop_variety = crop_or_rotation.crop_list[0][crop_name]
-            # crop_start_date = crop_or_rotation.find_value("crop_start_date")
             self.cropd.set_active_crop(crop_name, crop_variety)
+
             parameters = ParameterProvider(
                 cropdata=self.cropd, soildata=self.soildata, sitedata=self.sitedata
             )
+
+            self._override_defaults(parameters, kwargs)
+
             wofsim = Wofost80_NWLP_FD_beta(parameters, self.wdp, agromanagement)
             try:
                 wofsim.run_till_terminate()
