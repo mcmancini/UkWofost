@@ -59,7 +59,7 @@ class Crop:
     : param 'num_years' for grassland: Duration in years of the grassland
             crop. If grass is in a rotation with other crops, then the crops
             after grassland need to be planted after 'num_years' of the grassland
-    Any other aprameter in the agromanagement can be overwritten: e.g.:
+    Any other parameter in the agromanagement can be overwritten: e.g.:
     : param 'crop_start_date': sowing date of a crop (dt.date format)
     : param 'crop_end_date': harvest time if timed, rather than dependent
             on the phenological development of the crop
@@ -68,6 +68,14 @@ class Crop:
     : params 'StateEvents': list of events depending on phenology rather than
              timing. More information on agromanagment can be found at
              https://tinyurl.com/bdcmj5b7
+    -----------------------------------------------------------------------------
+    N.B.
+    At the moment, to simplify calibration of initial soil conditions, the
+    value for the start_crop_calendar parameter has been forced to be equal to
+    the crop_start_date. This makes sure that soil moisture and nutrient
+    content are defined when the crop is planted; having a crop calendar date
+    set earlier than the sowind date allows to already simulate water dynamics
+    in the soil when the crop is not yet in the ground.
     """
 
     DEFAULT_ARGS = {"TimedEvents": "Null"}
@@ -107,21 +115,16 @@ class Crop:
                     f"kwargs['crop_start_day'] and kwargs['crop_start_month'] or "
                     f"kwargs['crop_start_date']"
                 )
-            start_crop_calendar = dt.date(
-                self.calendar_year, args["crop_start_month"], 1
-            )
             crop_start_date = dt.date(
                 self.calendar_year,
                 args["crop_start_month"],
                 args["crop_start_day"],
             )
-            args["start_crop_calendar"] = start_crop_calendar
+            args["start_crop_calendar"] = crop_start_date
             args["crop_start_date"] = crop_start_date
         else:
             crop_start_date = args["crop_start_date"]
-            args["start_crop_calendar"] = dt.date(
-                crop_start_date.year, crop_start_date.month, 1
-            )
+            args["start_crop_calendar"] = crop_start_date
 
         event_types = {
             "apply_npk": {
