@@ -53,7 +53,7 @@ def run_rotations(input_sample_df, output_filename):
         ]
 
         # Iterate over rotations
-        for rotation in lonlat_df["name"].unique():
+        for rotation in lonlat_df["rotation"].unique():
             rotation_df = lonlat_df[lonlat_df["name"] == rotation]
             for item in rotation_df["iteration"].unique():
                 item_df = rotation_df[rotation_df["iteration"] == item].sort_values(
