@@ -433,12 +433,13 @@ class CropBuilder:
                     crop_params[param] = sample[param]
 
         # generate fertilisation structure if present
-        num_nutrients = sum(sample.index.str.match(r"NPK_T\d+"))
-        num_fertilisations = sum(sample.index.str.match(r"N_\d+"))
+        num_fertilisations = sum(sample.index.str.match(r"NPK_T\d+") & ~sample.isna())
+        num_nutrients = sum(sample.index.str.match(r"N_\d+") & ~sample.isna())
 
         if num_nutrients != num_fertilisations:
             raise ValueError(
-                "The number of nutrients and fertilizations must be equal."
+                f"Found {num_fertilisations} fertilisation events and "
+                f"{num_nutrients} "
             )
 
         if num_fertilisations > 0:
