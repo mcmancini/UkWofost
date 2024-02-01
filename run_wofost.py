@@ -49,6 +49,7 @@ for item in zip(CROPS, YEARS):
     rotation.append(Crop(calendar_year=year, crop=crop, **crop_params))
 
 crop_rotation = CropRotation(rotation)
+
 # Run WOFOST to compute crop yield
 crop_yield = sim.run(crop_rotation)
 print(crop_yield)
