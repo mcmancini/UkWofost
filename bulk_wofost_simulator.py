@@ -24,11 +24,28 @@ instances of the CropRotation class
 """
 
 import argparse
+import math
 import pandas as pd
 from ukwofost.crop_manager import Crop, CropBuilder, CropRotation
-from ukwofost.defaults import wofost_parameters
+from ukwofost.defaults import wofost_parameters, moisture_adjustment
 from ukwofost.simulation_manager import WofostSimulator
-from ukwofost.utils import lonlat2osgrid
+from ukwofost.utils import lonlat2osgrid, find_contiguous_sets
+
+
+def apply_conversion(df_row):
+    """
+    Function to convert yields in kg DM to kg at standard harvest moisture
+    """
+    try:
+        twso = df_row["TWSO"]
+        crop = df_row["crop"]
+
+        if isinstance(twso, float) and math.isnan(twso):
+            return None
+
+        return twso / (1 - moisture_adjustment.get(crop, 0))
+    except TypeError:
+        return None
 
 
 # pylint: disable=R0914
@@ -89,8 +106,23 @@ def run_rotations(input_sample_df, output_filename):
                 rotation_output["lon"], rotation_output["lat"] = lon, lat
                 rotation_output["rotation"] = rotation
                 rotation_output["iteration"] = item
+                crop_list = [list(d.keys())[0] for d in crop_rotation.crop_list]
+                crop_indices = find_contiguous_sets(rotation_output, "LAI")
+                crop_column = [
+                    crop_list[index - 1] if index > 0 else "fallow"
+                    for index in crop_indices
+                ]
+                rotation_output["crop"] = crop_column
+
+                # yield conversion
+                rotation_output["yield"] = rotation_output.apply(
+                    apply_conversion, axis=1
+                )
+
                 crop_yield = pd.concat([crop_yield, rotation_output], ignore_index=True)
+
                 print("Done...")
+
     crop_yield.to_csv(output_filename, index=False)
     print("All jobs completed\n------------------")
 
