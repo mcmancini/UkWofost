@@ -75,13 +75,19 @@ int_to_date(int_to_convert, reference=None)
 get_dtm_values(parcel_os_code, app_config)
     Query the DTM database based on longitude and latitude to
     retrieve elevation, slope and aspect
+
+find_contiguous_sets(data_frame, col_name)
+    Returns ordinal indices of contiguous non-NA values in
+    a column of a dataframe that contains NAs and non-NA
+    values.
 """
 
-import re
 import math
 from math import exp, log, cos, sin, acos, asin, tan, floor
 from math import degrees as deg, radians as rad
 from datetime import date, datetime, time, timedelta
+import re
+import pandas as pd
 import psycopg2
 from pyproj import Transformer
 
@@ -742,3 +748,53 @@ def get_dtm_values(parcel_os_code, app_config):
     finally:
         if conn is not None:
             conn.close()
+
+
+def find_contiguous_sets(data_frame, col_name):
+    """
+    Returns ordinal indices of contiguous non-NA values in
+    a column of a dataframe that contains NAs and non-NA
+    values.
+    ------------------------------------------------------
+
+    input arguments:
+    :param data_frame: the pandas dataframe to query
+    :param col_name: the column of the dataframe for which
+        indices must be computed.
+
+    Output:
+    a list of indices
+
+    Example:
+    df["col"] = [
+        NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,
+        1,2,3,4,5,6,7,8,7,6,7,8,9,
+        NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,
+        1,2,3,4,3,4,3,2,3,4,5,6,7,8,1,2,3,
+        NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN,NaN
+    ]
+
+    >>> find_contiguous_sets(df, col)
+    [
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        1,1,1,1,1,1,1,1,1,1,1,1,1,
+        0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+        2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+        0,0,0,0,0,0,0,0,0,0,0,0
+    ]
+    """
+    pd_input = pd.DataFrame(
+        {"value": data_frame[col_name], "tag": data_frame[col_name] >= 0}
+    )
+
+    first = pd_input.index[pd_input["tag"] & ~pd_input["tag"].shift(1).fillna(False)]
+    last = (
+        pd_input.index[pd_input["tag"] & ~pd_input["tag"].shift(-1).fillna(False)] + 1
+    )
+    tuple_list = list(zip(first, last))
+    max_index = max(end for _, end in tuple_list)
+    result = [0] * max_index
+    for index, (start, end) in enumerate(tuple_list, start=1):
+        for i in range(start, end):
+            result[i] = index
+    return result
