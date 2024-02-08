@@ -43,7 +43,7 @@ def apply_conversion(df_row):
         if isinstance(twso, float) and math.isnan(twso):
             return None
 
-        return twso / moisture_adjustment.get(crop, 1.0)
+        return twso / (1 - moisture_adjustment.get(crop, 0))
     except TypeError:
         return None
 
@@ -106,21 +106,20 @@ def run_rotations(input_sample_df, output_filename):
                 rotation_output["lon"], rotation_output["lat"] = lon, lat
                 rotation_output["rotation"] = rotation
                 rotation_output["iteration"] = item
-                crop_yield = pd.concat([crop_yield, rotation_output], ignore_index=True)
                 crop_list = [list(d.keys())[0] for d in crop_rotation.crop_list]
-                crop_indices = find_contiguous_sets(crop_yield, "LAI")
+                crop_indices = find_contiguous_sets(rotation_output, "LAI")
                 crop_column = [
                     crop_list[index - 1] if index > 0 else "fallow"
                     for index in crop_indices
                 ]
-                crop_yield["crop"] = crop_column
-                crop_yield["yield"] = crop_yield.apply(apply_conversion, axis=1)
+                rotation_output["crop"] = crop_column
 
-                for i, elem in crop_yield.iterrows():
-                    print(i)
-                    print(apply_conversion(elem))
+                # yield conversion
+                rotation_output["yield"] = rotation_output.apply(
+                    apply_conversion, axis=1
+                )
 
-                # yield adjustment
+                crop_yield = pd.concat([crop_yield, rotation_output], ignore_index=True)
 
                 print("Done...")
 
