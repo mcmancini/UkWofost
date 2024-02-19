@@ -138,7 +138,7 @@ class Crop:
                 "comment": "All fertilizer amounts in kg/ha",
                 "line_template": (
                     "- {timing}: {{N_amount: {event[N_amount]}, "
-                    "P_amount: {event[P_amount]}, K_amount: {event[K_amount]}}}"
+                    "P_amount: {event[P_amount]}, K_amount: {event[K_amount]},"
                     "P_amount: {event[P_amount]}, K_amount: {event[K_amount]}, "
                     "N_recovery: {args[N_recovery]}, P_recovery: {args[P_recovery]}, "
                     "K_recovery: {args[K_recovery]}}}"
