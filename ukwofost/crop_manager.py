@@ -78,7 +78,12 @@ class Crop:
     in the soil when the crop is not yet in the ground.
     """
 
-    DEFAULT_ARGS = {"TimedEvents": "Null"}
+    DEFAULT_ARGS = {
+        "TimedEvents": "Null",
+        "N_recovery": 0.7,
+        "P_recovery": 0.7,
+        "K_recovery": 0.7,
+    }
 
     def __init__(self, calendar_year, crop, **kwargs):
         self.crop = crop
@@ -134,6 +139,9 @@ class Crop:
                 "line_template": (
                     "- {timing}: {{N_amount: {event[N_amount]}, "
                     "P_amount: {event[P_amount]}, K_amount: {event[K_amount]}}}"
+                    "P_amount: {event[P_amount]}, K_amount: {event[K_amount]}, "
+                    "N_recovery: {args[N_recovery]}, P_recovery: {args[P_recovery]}, "
+                    "K_recovery: {args[K_recovery]}}}"
                 ),
             },
             "mowing": {
@@ -156,7 +164,7 @@ class Crop:
                         self.variety, args["crop_start_date"], event
                     )
                     line = event_data["line_template"].format(
-                        timing=timing, event=event
+                        timing=timing, event=event, args=args
                     )
                     event_lines.append(line)
                 events_table = "\n                    ".join(event_lines)
