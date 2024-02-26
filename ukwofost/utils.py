@@ -80,12 +80,19 @@ find_contiguous_sets(data_frame, col_name)
     Returns ordinal indices of contiguous non-NA values in
     a column of a dataframe that contains NAs and non-NA
     values.
+
+read_parcel_data(gid, folder):
+    Read UKCEH parcel data retrieved from a series of
+    files contained in "folder".
+
 """
 
+import json
 import math
 from math import exp, log, cos, sin, acos, asin, tan, floor
 from math import degrees as deg, radians as rad
 from datetime import date, datetime, time, timedelta
+import os
 import re
 import pandas as pd
 import psycopg2
@@ -798,3 +805,35 @@ def find_contiguous_sets(data_frame, col_name):
         for i in range(start, end):
             result[i] = index
     return result
+
+
+def read_parcel_data(gid, folder):
+    """
+    Read UKCEH parcel data retrieved from a series of
+    files contained in "folder".
+
+    Parameters
+    ----------
+    :param gid (Int): parcel ID. It must one of the
+        parcel IDs of the 2021 CEH land cover map
+    :param main_folder (Str): path where all the json
+        files containing parcel data are stored.
+
+    Return
+    ------
+    rp (List): a list containing [lon, lat] corrdinates in
+        EPSG:4326 of the centroid of the parcel with gid =
+        inputted gid
+    """
+    metadata = {}
+    for root, _, files in os.walk(folder):
+        for filename in files:
+            if filename.endswith("_meta.json"):
+                filepath = os.path.join(root, filename)
+                with open(filepath, encoding="utf-8") as f:
+                    data = json.load(f)
+                    for feature in data["features"]:
+                        parcel_id = feature["gid"]
+                        coords = feature["rp"]
+                        metadata[parcel_id] = coords
+    return metadata.get(gid, "Parcel not found")
