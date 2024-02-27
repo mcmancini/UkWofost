@@ -14,11 +14,13 @@ from pcse.base import ParameterProvider
 
 # from pcse.models import Wofost80_NWLP_FD_beta
 # from pcse.models import Wofost72_WLP_FD, LINGRA_WLP_FD
+from pcse.db.nasapower import NASAPowerWeatherDataProvider
 from pcse.models import Wofost80_NWLP_FD_beta, LINGRA_WLP_FD
 from ukwofost.crop_manager import Crop, CropRotation
 from ukwofost.defaults import defaults, wofost_parameters
+from ukwofost.parcel import Parcel
 from ukwofost.weather_manager import NetCDFWeatherDataProvider
-from ukwofost.utils import osgrid2lonlat
+from ukwofost.utils import osgrid2lonlat, lonlat2osgrid
 from ukwofost.soil_manager import SoilGridsDataProvider
 
 # from ukwofost.config import default_timed_events
@@ -32,20 +34,28 @@ class WofostSimulator:
     based on a list of input parameter sets.
     This is useful to perform sensitivity analysis or
     to build a Wofost emulator
-    --------------------------------------------------
 
-    Required input parameters for initialisation:
-    :param parcel_id: OS grid code of the location of interest
+    Input parameters for initialisation
+    --------------------------------------------
 
-    Optional input parameters for initialisation
+    :param parcel: OS grid code of the location of interest
+        or an instance of the Parcel class
+    :param weather_provider (Str): either "Chess" (i.e., UKCEH
+        ChessScape UKCP18 1km), "Custom" (i.e., weather data
+        produced through data fusion and in csv format) or "NASA"
+        (i.e., the default WOFOST NASA historic weather data provider)
+    :param soil_provider: either "SoilGrids" or "WHSD", for SoilGrids
+        soil data or World Harmonized Soil Database data. The latter
+        does not yet have its data provider implemented, hence not
+        yet available.
+
+    Optional input parameters:
     :param **kwargs: a dictionary containing optional parameters
-           such as "RCP", the RCP scenario of interest, or
-           "ENSEMBLE", the climate ensemble member of interest.
-           Here is also where a parameter to select alternative
-           wheater data or soil data for the analysis will be
-           selected (!not implemented yet!)
+        such as "RCP", the RCP scenario of interest, or
+        "ENSEMBLE", the climate ensemble member of interest.
 
-    Methods defined here:
+    Methods defined here
+    --------------------
 
     __str__(self, /)
         Return str(self).
@@ -59,23 +69,134 @@ class WofostSimulator:
 
     wofost_params = wofost_parameters
 
-    def __init__(self, parcel_id, **kwargs):
-        self.lon, self.lat = osgrid2lonlat(parcel_id, epsg=4236)
-        self.osgrid_code = parcel_id
+    def __init__(self, parcel, weather_provider, soil_provider, **kwargs):
+        self._parcel = parcel
+        self._ensemble = kwargs.get("ENSEMBLE", self._DEFAULT_ENSEMBLE)
+        self._rcp = kwargs.get("RCP", self._DEFAULT_RCP)
+        self._weather_provider = weather_provider
+        self._soil_provider = soil_provider
 
-        self.ensemble = kwargs.get("ENSEMBLE", self._DEFAULT_ENSEMBLE)
-        self.rcp = kwargs.get("RCP", self._DEFAULT_RCP)
+    @property
+    def parcel_id(self):
+        """Assign parcel ID"""
+        return self._find_parcel_id(self._parcel)
 
-        # weather
-        self.wdp = NetCDFWeatherDataProvider(self.osgrid_code, self.rcp, self.ensemble)
-        # soil
-        self.soildata = SoilGridsDataProvider(self.osgrid_code)
+    @property
+    def osgrid_code(self):
+        """Assign OS Grid code of the parcel centroid"""
+        return self._find_oscode(self._parcel)
 
-        # site data
-        self.sitedata = defaults.get("sitedata")
+    @property
+    def lon(self):
+        """return longitude of parcel centroid"""
+        return self._find_lonlat(self._parcel)["lon"]
 
-        # cropd
-        self.cropd = defaults.get("cropd")
+    @property
+    def lat(self):
+        """return longitude of parcel centroid"""
+        return self._find_lonlat(self._parcel)["lat"]
+
+    @property
+    def wdp(self):
+        """Return weather data"""
+        return self._build_weather(
+            self.lon, self.lat, self._weather_provider, self._rcp, self._ensemble
+        )
+
+    @property
+    def soildata(self):
+        """Return soil data"""
+        return self._build_soildata(self.lon, self.lat, self._soil_provider)
+
+    @property
+    def sitedata(self):
+        """Return site data"""
+        return defaults.get("sitedata")
+
+    @property
+    def cropd(self):
+        """Return crop parameter initialisator"""
+        return defaults.get("cropd")
+
+    @staticmethod
+    def _find_parcel_id(parcel):
+        """Retrieve parcel ID from parcel object"""
+        if isinstance(parcel, str):
+            parcel_id = parcel
+        elif isinstance(parcel, Parcel):
+            parcel_id = parcel.parcel_id
+        else:
+            parcel_id = None
+            raise ValueError(
+                f"{parcel} must be either an ID (str) or a Parcel instance."
+            )
+        return parcel_id
+
+    @staticmethod
+    def _find_oscode(parcel):
+        """Retrieve parcel ID from parcel object"""
+        if isinstance(parcel, str):
+            os_code = parcel
+        elif isinstance(parcel, Parcel):
+            os_code = parcel.osgrid_code
+        else:
+            os_code = None
+            raise ValueError(
+                f"{parcel} must be either an ID (str) or a Parcel instance."
+            )
+        return os_code
+
+    @staticmethod
+    def _find_lonlat(parcel):
+        """Find lon and lat of parcel"""
+        if isinstance(parcel, str):
+            lonlat = osgrid2lonlat(gridref=parcel, epsg=4326)
+            lonlat_dict = {
+                "lon": lonlat[0],
+                "lat": lonlat[1],
+            }
+        elif isinstance(parcel, Parcel):
+            lonlat = osgrid2lonlat(gridref=parcel.osgrid_code, epsg=4326)
+            lonlat_dict = {
+                "lon": lonlat[0],
+                "lat": lonlat[1],
+            }
+        else:
+            lonlat_dict = {
+                "lon": None,
+                "lat": None,
+            }
+            raise ValueError(
+                f"{parcel} must be either an ID (str) or a Parcel instance."
+            )
+        return lonlat_dict
+
+    @staticmethod
+    def _build_weather(lon, lat, weather_provider, rcp, ensemble):
+        if weather_provider == "NASA":
+            wdp = NASAPowerWeatherDataProvider(latitude=lat, longitude=lon)
+        elif weather_provider == "Chess":
+            oscode = lonlat2osgrid(coords=(lon, lat), figs=8)
+            wdp = NetCDFWeatherDataProvider(oscode, rcp, ensemble)
+        elif weather_provider == "Custom":
+            wdp = None
+        else:
+            wdp = None
+            raise ValueError("weather provider can only be 'NASA', 'Chess' or 'Custom'")
+        return wdp
+
+    @staticmethod
+    def _build_soildata(lon, lat, soil_provider):
+        if soil_provider == "SoilGrids":
+            oscode = lonlat2osgrid(coords=(lon, lat), figs=8)
+            soildata = SoilGridsDataProvider(oscode)
+        elif soil_provider == "WHSD":
+            soildata = None
+            raise ValueError("WHSD soil data provider not yet implemented")
+        else:
+            soildata = None
+            raise ValueError("Soil data provider can only be 'SoilGrids' or 'WHSD'")
+        return soildata
 
     def run(self, crop_or_rotation, **kwargs):
         """
