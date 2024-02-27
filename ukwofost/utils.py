@@ -298,18 +298,24 @@ def osgrid2lonlat(gridref, epsg=None):
     Convert British National Grid references to OSGB36 numeric coordinates.
     Grid references can be 4, 6, 8 or 10 figures.
 
-    :param gridref: str - BNG grid reference
-    :returns coords: tuple - x, y coordinates
+    Input parameters
+    ----------------
+    :param gridref (str): BNG grid reference
+    :param epsg (int): EPSG code
+
+    Return:
+    ------
+    :coords(tuple): (x, y) coordinates
 
     Examples:
 
     Single value
-    >>> osgrid2lonlat('NT2755072950')
+    >>> osgrid2lonlat('NT2755072950', epsg=27700)
     (327550, 672950)
 
     For multiple values, use Python's zip function and list comprehension
     >>> gridrefs = ['HU431392', 'SJ637560', 'TV374354']
-    >>> x, y = zip(*[osgrid2lonlat(g) for g in gridrefs])
+    >>> x, y = zip(*[osgrid2lonlat(g, epsg=27700) for g in gridrefs])
     >>> x
     (443100, 363700, 537400)
     >>> y
