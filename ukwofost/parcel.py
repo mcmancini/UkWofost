@@ -12,7 +12,8 @@ WofostSimulator objects.
 
 import warnings
 import geopandas as gpd
-from ukwofost.utils import lonlat2osgrid
+from ukwofost import app_config
+from ukwofost.utils import lonlat2osgrid, get_dtm_values
 
 
 class Parcel:
@@ -51,10 +52,15 @@ class Parcel:
         """Set OS grid reference code of parcel centroid"""
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            return self.calc_os_code(self.parcel_id)
+            return self._calc_os_code(self.parcel_id)
+
+    @property
+    def elevation(self):
+        """Set parcel elevation if exists"""
+        return self._calc_elevation(self.osgrid_code)
 
     @staticmethod
-    def calc_os_code(parcel_id):
+    def _calc_os_code(parcel_id):
         """
         Compute OS grid code of the centroid
         of the parcel with id = "parcel_id"
@@ -67,10 +73,20 @@ class Parcel:
         os_code = lonlat2osgrid(coords=lon_lat, figs=8)
         return os_code
 
+    @staticmethod
+    def _calc_elevation(os_code):
+        """Retrieve elevation of the centroid of the parcel"""
+        try:
+            elevation = round(get_dtm_values(os_code, app_config)["elevation"])
+        except ConnectionError:
+            elevation = 0
+        return elevation
+
     def __str__(self):
         msg = "======================================================\n"
         msg += "               Parcel characteristics\n"
         msg += "---------------------Description----------------------\n"
         msg += f"Parcel ID: {str(self.parcel_id)}\n"
-        msg += f"Parcel OS Grid code: {self.osgrid_code}"
+        msg += f"Parcel OS Grid code: {self.osgrid_code}\n"
+        msg += f"Parcel elevation: {self.elevation} metres\n"
         return msg
