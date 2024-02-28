@@ -19,7 +19,10 @@ from pcse.models import Wofost80_NWLP_FD_beta, LINGRA_WLP_FD
 from ukwofost.crop_manager import Crop, CropRotation
 from ukwofost.defaults import defaults, wofost_parameters
 from ukwofost.parcel import Parcel
-from ukwofost.weather_manager import NetCDFWeatherDataProvider
+from ukwofost.weather_manager import (
+    NetCDFWeatherDataProvider,
+    ParcelWeatherDataProvider,
+)
 from ukwofost.utils import osgrid2lonlat, lonlat2osgrid
 from ukwofost.soil_manager import SoilGridsDataProvider
 
@@ -100,7 +103,12 @@ class WofostSimulator:
     def wdp(self):
         """Return weather data"""
         return self._build_weather(
-            self.lon, self.lat, self._weather_provider, self._rcp, self._ensemble
+            self.lon,
+            self.lat,
+            self.parcel_id,
+            self._weather_provider,
+            self._rcp,
+            self._ensemble,
         )
 
     @property
@@ -171,19 +179,22 @@ class WofostSimulator:
             )
         return lonlat_dict
 
+    # pylint: disable=R0913
     @staticmethod
-    def _build_weather(lon, lat, weather_provider, rcp, ensemble):
+    def _build_weather(lon, lat, parcel_code, weather_provider, rcp, ensemble):
         if weather_provider == "NASA":
             wdp = NASAPowerWeatherDataProvider(latitude=lat, longitude=lon)
         elif weather_provider == "Chess":
             oscode = lonlat2osgrid(coords=(lon, lat), figs=8)
             wdp = NetCDFWeatherDataProvider(oscode, rcp, ensemble)
         elif weather_provider == "Custom":
-            wdp = None
+            wdp = ParcelWeatherDataProvider(lon=lon, lat=lat, parcel_id=parcel_code)
         else:
             wdp = None
             raise ValueError("weather provider can only be 'NASA', 'Chess' or 'Custom'")
         return wdp
+
+    # pylint: enable=R0913
 
     @staticmethod
     def _build_soildata(lon, lat, soil_provider):
