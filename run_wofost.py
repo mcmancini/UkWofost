@@ -26,10 +26,10 @@ of the Crop class is instantiated (line 45). More information on
 agromanagment can be found at https://tinyurl.com/bdcmj5b7
 """
 
-from ukwofost.crop_manager import Crop, CropRotation
-from ukwofost.defaults import defaults
-from ukwofost.simulation_manager import WofostSimulator
-from ukwofost.utils import lonlat2osgrid
+from ukwofost.core.crop_manager import Crop, CropRotation
+from ukwofost.core.defaults import defaults
+from ukwofost.core.simulation_manager import WofostSimulator
+from ukwofost.core.utils import lonlat2osgrid
 
 # Define input parameters
 LON, LAT = -3.4111140552800747, 57.13317708272391
@@ -38,7 +38,9 @@ YEARS = [2020, 2021, 2022]
 
 # Build Wofost simulator
 os_code = lonlat2osgrid((LON, LAT), 10)
-sim = WofostSimulator(os_code)
+sim = WofostSimulator(
+    parcel=os_code, weather_provider="Chess", soil_provider="SoilGrids"
+)
 
 # Define management
 rotation = []

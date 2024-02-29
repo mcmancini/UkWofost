@@ -7,18 +7,23 @@ A weather data provider reading its data from netCDF files.
 Code based on the 'excelweatherdataprovider contained in the
 fileinput of the PCSE module
 """
+import csv
+import math
 import os
 import datetime as dt
 import xarray as xr
 import pandas as pd
+import numpy as np
 from pcse.base import WeatherDataContainer, WeatherDataProvider
+from pcse.fileinput.csvweatherdataprovider import ParseError, csvdate_to_date
 from pcse.util import reference_ET, check_angstromAB
 from pcse.exceptions import PCSEError
 from pcse.db import NASAPowerWeatherDataProvider
 from pcse.settings import settings
-from ukwofost import app_config
-from ukwofost.utils import (
+from ukwofost.core import app_config
+from ukwofost.core.utils import (
     osgrid2lonlat,
+    lonlat2osgrid,
     rh_to_vpress,
     calc_doy,
     nearest,
@@ -50,6 +55,18 @@ def flux_to_cm(x):
     to cm/day
     """
     return x * 86400 / 10.0
+
+
+def mm_to_cm(x):
+    """Mapping function for conversion from mm to cm"""
+    return x / 10
+
+
+def w_to_j(x):
+    """
+    Mapping function to convert from W*m-2 to J *m-2*day-1
+    """
+    return x * (24 * 3600)
 
 
 # Declare NetCDFWeatherDataProvider class
@@ -110,7 +127,7 @@ class NetCDFWeatherDataProvider(WeatherDataProvider):
         self.osgrid_10km = osgrid_code[0:2].upper() + os_digits_10k
         # pylint: disable=E1101
         self.nc_fname = (
-            app_config.data_dirs["climate_dir"]
+            app_config.data_dirs["chess_climate_dir"]
             + f"{self.osgrid_10km.upper()}_{rcp}_{ensemble:02d}.nc"
         )
         self.rcp, self.ensemble = rcp, ensemble
@@ -389,4 +406,236 @@ class NetCDFWeatherDataProvider(WeatherDataProvider):
     # pylint: enable=R0913
 
 
-# pylint: enable=R0902
+class ParcelWeatherDataProvider(WeatherDataProvider):
+    """
+    Class based on the pcse.fileinput.CSVWeatherDataProvider in WOFOST
+    to load weather data for a specific parcel from csv files. Parcels
+    are the highest resolution possible for the UK farm model that relies on
+    an UK implementation of WOFOST for the estimation of future crop yields.
+
+    Parameters
+    ----------
+    :param csv_fname: name of the CSV file to be read
+    :param delimiter: CSV delimiter
+    :param dateformat: date format to be read. Default is '%Y%m%d'
+    :keyword ETmodel: "PM"|"P" for selecting Penman-Monteith or Penman
+        method for reference evapotranspiration. Default is 'PM'.
+    :param force_reload: Ignore cache file and reload from the CSV file
+
+    As this is a different
+    """
+
+    obs_conversions = {
+        "TMAX": no_conversion,
+        "TMIN": no_conversion,
+        "IRRAD": w_to_j,
+        "VAP": no_conversion,
+        "WIND": no_conversion,
+        "RAIN": mm_to_cm,
+        "SNOWDEPTH": no_conversion,
+    }
+
+    variable_mapping = {
+        "date": "DAY",
+        "tasmin": "TMIN",
+        "tasmax": "TMAX",
+        "pr": "RAIN",
+        "wspeed": "WIND",
+    }
+
+    # pylint: disable=R0913,C0103
+    def __init__(
+        self,
+        parcel,
+        delimiter=",",
+        dateformat="%Y-%m-%d",
+        ETmodel="PM",
+        force_reload=False,
+    ):
+        WeatherDataProvider.__init__(self)
+        self.longitude = parcel.lon
+        self.latitude = parcel.lat
+        self.parcel_id = parcel.parcel_id
+        self.elevation = parcel.elevation
+        self.dateformat = dateformat
+        self.ETmodel = ETmodel
+        self.nodata_value = -99
+        self.has_sunshine = False
+        self._create_header()
+        self._create_angstrom()
+
+        if not os.path.exists(self.fp_csv_fname):
+            msg = f"Cannot find weather file at: {self.fp_csv_fname}"
+            raise PCSEError(msg)
+
+        if force_reload or not self._load_cache_file(self.fp_csv_fname):
+            with open(self.fp_csv_fname, "r", encoding="utf-8") as csv_file:
+                # csv_file.readline()  # Skip first line
+                self._read_observations(csv_file, delimiter)
+            self._write_cache_file(self.fp_csv_fname)
+
+    @property
+    def fp_csv_fname(self):
+        """Set path including name of weather file"""
+        return self._build_filename(self.parcel_id)
+
+    @staticmethod
+    def _build_filename(parcel_code):
+        """Build filename for weather data"""
+        # pylint: disable=E1101
+        filepath = app_config.data_dirs["custom_climate_dir"]
+        filename = f"{filepath}parcel_{str(parcel_code)}_mesoclim.csv"
+        # pylint: enable=E1101
+        return filename
+
+    @staticmethod
+    def _create_oscode(lon, lat):
+        """Create OS grid reference code for lon-lat pair"""
+        return lonlat2osgrid(coords=(lon, lat), figs=8)
+
+    def _create_header(self):
+        country = "Great Britain"
+        desc = (
+            f"Downscaled weather for parcel '{self.parcel_id}' at "
+            f"location '{lonlat2osgrid((self.longitude, self.latitude), figs=8)}'"
+        )
+        src = "Environment and Sustainability Institute, University of Exeter"
+        contact = (
+            "Jonathan Mosedale: J.Mosedale@exeter.ac.uk \n"
+            "Ilya Maclean: i.m.d.maclean@exeter.ac.uk\n"
+        )
+        self.description = [
+            "Weather data for:",
+            f"Country: {country}",
+            f"Station: {self._create_oscode(self.longitude, self.latitude)}",
+            f"Description: {desc}",
+            f"Source: {src}",
+            f"Contact: {contact}",
+        ]
+
+    def _create_angstrom(self):
+        """Find and assign Angstrom coefficients A and B"""
+        w = NASAPowerWeatherDataProvider(
+            latitude=self.latitude, longitude=self.longitude
+        )
+        # pylint: disable=C0103
+        self.angstA, self.angstB = check_angstromAB(w.angstA, w.angstB)
+
+    # pylint: disable=W4902, R0914
+    def _read_observations(self, csv_file, delimiter):
+        """Processes the rows with meteo data and converts into the correct units."""
+        obs = csv.DictReader(csv_file, delimiter=delimiter, quotechar='"')
+        keys_to_remove = [
+            "tasmean",
+            "trange",
+            "swdown",
+            "lwdown",
+            "hurs",
+            "huss",
+            "psfc",
+        ]
+
+        renamed_obs = []
+        for d in obs:
+            renamed_d = {}
+            for old_name, new_name in self.variable_mapping.items():
+                renamed_d[new_name] = d.pop(old_name)
+
+            renamed_d["SNOWDEPTH"] = np.nan
+            renamed_d["VAP"] = rh_to_vpress(float(d["hurs"]), float(d["tasmean"]))
+            renamed_d["IRRAD"] = float(d["swdown"]) + float(d["lwdown"])
+
+            # Merge with the remaining data
+            renamed_d.update(d)
+            renamed_obs.append(renamed_d)
+
+        for item in renamed_obs:
+            for key in keys_to_remove:
+                item.pop(key, None)
+
+        for i, d in enumerate(renamed_obs):
+            try:
+                day = None
+                day = csvdate_to_date(d["DAY"], self.dateformat)
+                row = {"DAY": day}
+                for label, func in self.obs_conversions.items():
+                    value = float(d[label])
+                    r = func(value)
+                    if math.isnan(r):
+                        if label == "SNOWDEPTH":
+                            continue
+                        raise ParseError
+                    row[label] = r
+
+                # Reference ET in mm/day
+                e0, es0, et0 = reference_ET(
+                    LAT=self.latitude,
+                    ELEV=self.elevation,
+                    ANGSTA=self.angstA,
+                    ANGSTB=self.angstB,
+                    ETMODEL=self.ETmodel,
+                    **row,
+                )
+                # convert to cm/day
+                row["E0"] = e0 / 10.0
+                row["ES0"] = es0 / 10.0
+                row["ET0"] = et0 / 10.0
+
+                wdc = WeatherDataContainer(
+                    LAT=self.latitude, LON=self.longitude, ELEV=self.elevation, **row
+                )
+                self._store_WeatherDataContainer(wdc, day)
+            except (ParseError, KeyError):
+                msg = (
+                    f"Failed reading element '{label}' "
+                    f"for day '{day}' at line {i}. Skipping ..."
+                )
+                self.logger.warn(msg)
+            except ValueError:  # strange value in cell
+                msg = f"Failed computing a value for day '{day}' at row {i}"
+                self.logger.warn(msg)
+
+    # pylint: enable=W4902, R0914
+
+    def _load_cache_file(self, csv_fname):
+        cache_filename = self._find_cache_file(csv_fname)
+        if cache_filename is None:
+            return False
+        self._load(cache_filename)
+        return True
+
+    def _find_cache_file(self, csv_fname):
+        """Try to find a cache file for file name
+
+        Returns None if the cache file does not exist, else it returns the full
+        path to the cache file.
+        """
+        cache_filename = self._get_cache_filename(csv_fname)
+        if os.path.exists(cache_filename):
+            cache_date = os.stat(cache_filename).st_mtime
+            csv_date = os.stat(csv_fname).st_mtime
+            if cache_date > csv_date:  # cache is more recent then CSV file
+                return cache_filename
+
+        return None
+
+    def _get_cache_filename(self, csv_fname):
+        """Constructs the filename used for cache files given csv_fname"""
+        basename = os.path.basename(csv_fname)
+        filename, _ = os.path.splitext(basename)
+
+        tmp = f"{self.__class__.__name__}_{filename}.cache"
+        # pylint: disable=E1101
+        cache_filename = os.path.join(settings.METEO_CACHE_DIR, tmp)
+        # pylint: enable=E1101
+        return cache_filename
+
+    def _write_cache_file(self, csv_fname):
+        cache_filename = self._get_cache_filename(csv_fname)
+        try:
+            self._dump(cache_filename)
+        except (IOError, EnvironmentError) as e:
+            msg = f"Failed to write cache to file '{cache_filename}' due to: {e}"
+            self.logger.warning(msg)
+
+    # pylint: enable=R0913,C0103,R0902

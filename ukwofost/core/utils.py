@@ -80,12 +80,19 @@ find_contiguous_sets(data_frame, col_name)
     Returns ordinal indices of contiguous non-NA values in
     a column of a dataframe that contains NAs and non-NA
     values.
+
+read_parcel_data(gid, folder):
+    Read UKCEH parcel data retrieved from a series of
+    files contained in "folder".
+
 """
 
+import json
 import math
 from math import exp, log, cos, sin, acos, asin, tan, floor
 from math import degrees as deg, radians as rad
 from datetime import date, datetime, time, timedelta
+import os
 import re
 import pandas as pd
 import psycopg2
@@ -291,18 +298,24 @@ def osgrid2lonlat(gridref, epsg=None):
     Convert British National Grid references to OSGB36 numeric coordinates.
     Grid references can be 4, 6, 8 or 10 figures.
 
-    :param gridref: str - BNG grid reference
-    :returns coords: tuple - x, y coordinates
+    Input parameters
+    ----------------
+    :param gridref (str): BNG grid reference
+    :param epsg (int): EPSG code
+
+    Return:
+    ------
+    :coords(tuple): (x, y) coordinates
 
     Examples:
 
     Single value
-    >>> osgrid2lonlat('NT2755072950')
+    >>> osgrid2lonlat('NT2755072950', epsg=27700)
     (327550, 672950)
 
     For multiple values, use Python's zip function and list comprehension
     >>> gridrefs = ['HU431392', 'SJ637560', 'TV374354']
-    >>> x, y = zip(*[osgrid2lonlat(g) for g in gridrefs])
+    >>> x, y = zip(*[osgrid2lonlat(g, epsg=27700) for g in gridrefs])
     >>> x
     (443100, 363700, 537400)
     >>> y
@@ -798,3 +811,35 @@ def find_contiguous_sets(data_frame, col_name):
         for i in range(start, end):
             result[i] = index
     return result
+
+
+def read_parcel_data(gid, folder):
+    """
+    Read UKCEH parcel data retrieved from a series of
+    files contained in "folder".
+
+    Parameters
+    ----------
+    :param gid (Int): parcel ID. It must one of the
+        parcel IDs of the 2021 CEH land cover map
+    :param main_folder (Str): path where all the json
+        files containing parcel data are stored.
+
+    Return
+    ------
+    rp (List): a list containing [lon, lat] corrdinates in
+        EPSG:4326 of the centroid of the parcel with gid =
+        inputted gid
+    """
+    metadata = {}
+    for root, _, files in os.walk(folder):
+        for filename in files:
+            if filename.endswith("_meta.json"):
+                filepath = os.path.join(root, filename)
+                with open(filepath, encoding="utf-8") as f:
+                    data = json.load(f)
+                    for feature in data["features"]:
+                        parcel_id = feature["gid"]
+                        coords = feature["rp"]
+                        metadata[parcel_id] = coords
+    return metadata.get(gid, "Parcel not found")
