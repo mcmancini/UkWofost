@@ -9,8 +9,8 @@ latitude pair in the UK
 
 from pcse.fileinput import YAMLCropDataProvider
 from pcse.util import WOFOST80SiteDataProvider
-from ukwofost import app_config
-from ukwofost.config_parser import ConfigReader
+from ukwofost.core import app_config
+from ukwofost.core.config_parser import ConfigReader
 
 # CLIMATE
 RCP = "rcp26"
