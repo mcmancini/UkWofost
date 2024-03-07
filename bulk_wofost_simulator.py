@@ -77,59 +77,64 @@ def run_rotations(input_sample_df, output_filename):
         for rotation in lonlat_df["rotation"].unique():
             rotation_df = lonlat_df[lonlat_df["rotation"] == rotation]
             for item in rotation_df["iteration"].unique():
-                item_df = rotation_df[rotation_df["iteration"] == item]
-
-                print(
-                    f"Running simulator for '{rotation}' and iteration "
-                    f"'{str(item)}' in location '{os_code}'"
-                )
-                # Deal with parameters overridden by user (e.g., initial soil
-                # conditions, or Wofost crop parameters)
-                parameter_dict = item_df.iloc[0, :].to_dict()
-                nonstandard_parameters = {
-                    key: value
-                    for key, value in parameter_dict.items()
-                    if key in wofost_parameters
-                }
-
-                # Build rotation
-                crops_in_rotation = []
-                for _, row in item_df.iterrows():
-                    # Agromanagement of crop rotation
-                    crop_args = CropBuilder(row)
-                    crop_params = crop_args.crop_parameters
-                    crop = Crop(crop_args.calendar_year, crop_args.crop, **crop_params)
-                    crops_in_rotation.append(crop)
-
-                crop_rotation = CropRotation(crops_in_rotation)
                 try:
+                    item_df = rotation_df[rotation_df["iteration"] == item]
+
+                    print(
+                        f"Running simulator for '{rotation}' and iteration "
+                        f"'{str(item)}' in location '{os_code}'"
+                    )
+                    # Deal with parameters overridden by user (e.g., initial soil
+                    # conditions, or Wofost crop parameters)
+                    parameter_dict = item_df.iloc[0, :].to_dict()
+                    nonstandard_parameters = {
+                        key: value
+                        for key, value in parameter_dict.items()
+                        if key in wofost_parameters
+                    }
+
+                    # Build rotation
+                    crops_in_rotation = []
+                    for _, row in item_df.iterrows():
+                        # Agromanagement of crop rotation
+                        crop_args = CropBuilder(row)
+                        crop_params = crop_args.crop_parameters
+                        crop = Crop(
+                            crop_args.calendar_year, crop_args.crop, **crop_params
+                        )
+                        crops_in_rotation.append(crop)
+
+                    crop_rotation = CropRotation(crops_in_rotation)
                     rotation_output = sim.run(
                         crop_rotation, **nonstandard_parameters
                     ).reset_index(drop=False)
+
+                    rotation_output["lon"], rotation_output["lat"] = lon, lat
+                    rotation_output["rotation"] = rotation
+                    rotation_output["iteration"] = item
+                    crop_list = [list(d.keys())[0] for d in crop_rotation.crop_list]
+                    crop_indices = find_contiguous_sets(rotation_output, "LAI")
+                    crop_column = [
+                        crop_list[index - 1] if index > 0 else "fallow"
+                        for index in crop_indices
+                    ]
+                    rotation_output["crop"] = crop_column
+
+                    # yield conversion
+                    rotation_output["yield"] = rotation_output.apply(
+                        apply_conversion, axis=1
+                    )
+
+                    crop_yield = pd.concat(
+                        [crop_yield, rotation_output], ignore_index=True
+                    )
+
+                    print("Done...")
                 # pylint: disable=W0621, W0718
                 except Exception as e:
                     print(e)
                     continue
                 # pylint: enable=W0621, W0718
-                rotation_output["lon"], rotation_output["lat"] = lon, lat
-                rotation_output["rotation"] = rotation
-                rotation_output["iteration"] = item
-                crop_list = [list(d.keys())[0] for d in crop_rotation.crop_list]
-                crop_indices = find_contiguous_sets(rotation_output, "LAI")
-                crop_column = [
-                    crop_list[index - 1] if index > 0 else "fallow"
-                    for index in crop_indices
-                ]
-                rotation_output["crop"] = crop_column
-
-                # yield conversion
-                rotation_output["yield"] = rotation_output.apply(
-                    apply_conversion, axis=1
-                )
-
-                crop_yield = pd.concat([crop_yield, rotation_output], ignore_index=True)
-
-                print("Done...")
 
     crop_yield.to_csv(output_filename, index=False)
     print("All jobs completed\n------------------")
