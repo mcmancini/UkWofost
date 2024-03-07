@@ -11,20 +11,18 @@ space
 
 import pandas as pd
 from pcse.base import ParameterProvider
-
 # from pcse.models import Wofost80_NWLP_FD_beta
 # from pcse.models import Wofost72_WLP_FD, LINGRA_WLP_FD
 from pcse.db.nasapower import NASAPowerWeatherDataProvider
-from pcse.models import Wofost80_NWLP_FD_beta, LINGRA_WLP_FD
+from pcse.models import LINGRA_WLP_FD, Wofost80_NWLP_FD_beta
+
 from ukwofost.core.crop_manager import Crop, CropRotation
 from ukwofost.core.defaults import defaults, wofost_parameters
 from ukwofost.core.parcel import Parcel
-from ukwofost.core.weather_manager import (
-    NetCDFWeatherDataProvider,
-    ParcelWeatherDataProvider,
-)
-from ukwofost.core.utils import osgrid2lonlat
 from ukwofost.core.soil_manager import SoilGridsDataProvider
+from ukwofost.core.utils import osgrid2lonlat
+from ukwofost.core.weather_manager import (NetCDFWeatherDataProvider,
+                                           ParcelWeatherDataProvider)
 
 
 # pylint: disable=R0902

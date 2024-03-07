@@ -8,6 +8,7 @@ agromanagment. This could be a standard agromanagement (contained
 in a yaml file to be parsed with the ConfigReader in config_parser.py)
 """
 import datetime as dt
+
 import pandas as pd
 import yaml
 

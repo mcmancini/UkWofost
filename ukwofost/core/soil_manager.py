@@ -17,17 +17,15 @@ It contains the following:
 Any other soil data source will have its own child class defined here
 """
 from math import log10
+
 import numpy as np
-from rosetta import rosetta, SoilData
-from soiltexture import getTexture
 import xarray as xr
+from rosetta import SoilData, rosetta
+from soiltexture import getTexture
+
 from ukwofost.core import app_config
-from ukwofost.core.utils import (
-    osgrid2lonlat,
-    water_retention,
-    water_conductivity,
-    nearest,
-)
+from ukwofost.core.utils import (nearest, osgrid2lonlat, water_conductivity,
+                                 water_retention)
 
 
 class SoilDataProvider(dict):

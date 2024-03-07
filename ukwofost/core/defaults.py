@@ -9,6 +9,7 @@ latitude pair in the UK
 
 from pcse.fileinput import YAMLCropDataProvider
 from pcse.util import WOFOST80SiteDataProvider
+
 from ukwofost.core import app_config
 from ukwofost.core.config_parser import ConfigReader
 

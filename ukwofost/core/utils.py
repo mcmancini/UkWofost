@@ -89,11 +89,15 @@ read_parcel_data(gid, folder):
 
 import json
 import math
-from math import exp, log, cos, sin, acos, asin, tan, floor
-from math import degrees as deg, radians as rad
-from datetime import date, datetime, time, timedelta
 import os
 import re
+from datetime import date, datetime, time, timedelta
+from math import acos, asin, cos
+from math import degrees as deg
+from math import exp, floor, log
+from math import radians as rad
+from math import sin, tan
+
 import pandas as pd
 import psycopg2
 from pyproj import Transformer
