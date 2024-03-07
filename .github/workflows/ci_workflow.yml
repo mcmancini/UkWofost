@@ -1,4 +1,4 @@
-name: macOS & Windows Continuous Integration
+name: macOS, Windows and Ubuntu Continuous Integration
 
 on: [push, pull_request]
 
