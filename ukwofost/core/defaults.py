@@ -194,7 +194,7 @@ wofost_parameters = set(
 moisture_adjustment = {
     "wheat": 0.145,
     "barley": 0.145,
-    "rapeseed": 0.9,
+    "rapeseed": 0.12,
     "potato": 0.79,
     "rye_grass": 0.75,
     "maize": 0.155,
