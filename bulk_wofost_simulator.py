@@ -26,10 +26,10 @@ instances of the CropRotation class
 import argparse
 import math
 import pandas as pd
-from ukwofost.crop_manager import Crop, CropBuilder, CropRotation
-from ukwofost.defaults import wofost_parameters, moisture_adjustment
-from ukwofost.simulation_manager import WofostSimulator
-from ukwofost.utils import lonlat2osgrid, find_contiguous_sets
+from ukwofost.core.crop_manager import Crop, CropBuilder, CropRotation
+from ukwofost.core.defaults import wofost_parameters, moisture_adjustment
+from ukwofost.core.simulation_manager import WofostSimulator
+from ukwofost.core.utils import lonlat2osgrid, find_contiguous_sets
 
 
 def apply_conversion(df_row):
@@ -64,7 +64,11 @@ def run_rotations(input_sample_df, output_filename):
         lon, lat = row["lon"], row["lat"]
         # initialise simulator
         os_code = lonlat2osgrid((lon, lat), 10)
-        sim = WofostSimulator(os_code)
+        sim = WofostSimulator(
+            parcel=os_code,
+            weather_provider="Chess",
+            soil_provider="SoilGrids",
+        )
         lonlat_df = input_sample_df[
             (input_sample_df["lon"] == lon) & (input_sample_df["lat"] == lat)
         ]
@@ -98,9 +102,15 @@ def run_rotations(input_sample_df, output_filename):
                     crops_in_rotation.append(crop)
 
                 crop_rotation = CropRotation(crops_in_rotation)
-                rotation_output = sim.run(
-                    crop_rotation, **nonstandard_parameters
-                ).reset_index(drop=False)
+                try:
+                    rotation_output = sim.run(
+                        crop_rotation, **nonstandard_parameters
+                    ).reset_index(drop=False)
+                # pylint: disable=W0621, W0718
+                except Exception as e:
+                    print(e)
+                    continue
+                # pylint: enable=W0621, W0718
                 rotation_output["lon"], rotation_output["lat"] = lon, lat
                 rotation_output["rotation"] = rotation
                 rotation_output["iteration"] = item
