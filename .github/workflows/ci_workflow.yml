@@ -1,0 +1,42 @@
+name: macOS, Windows and Ubuntu Continuous Integration
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node-version: [20.x]
+        os: [macOS-latest, windows-latest, ubuntu-latest]
+        python-version:
+          - 3.11.6
+    defaults:
+      run:
+        shell: bash -el {0}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configuring Conda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          activate-environment: anaconda-client-env
+          environment-file: wofost-env.yml
+          auto-activate-base: false
+
+      - name: Quality Assurance
+        run: |
+          python -m flake8 ./ukwofost/ --count --show-source --statistics
+          python -m black --check ./ukwofost/
+          python -m isort --apply .
+
+      # - name: Unit Testing
+      #   run: |
+      #     python -m pytest ./tests/
+
+    #   - name: Notebook Testing
+    #     run: |
+    #       python -m pytest --nbmake ./examples/examples.ipynb

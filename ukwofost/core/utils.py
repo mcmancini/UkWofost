@@ -89,11 +89,15 @@ read_parcel_data(gid, folder):
 
 import json
 import math
-from math import exp, log, cos, sin, acos, asin, tan, floor
-from math import degrees as deg, radians as rad
-from datetime import date, datetime, time, timedelta
 import os
 import re
+from datetime import date, datetime, time, timedelta
+from math import acos, asin, cos
+from math import degrees as deg
+from math import exp, floor, log
+from math import radians as rad
+from math import sin, tan
+
 import pandas as pd
 import psycopg2
 from pyproj import Transformer
@@ -451,11 +455,13 @@ class Sun:
         dtime = datetime.combine(when, time(12, 0, 0))
         self.day = dtime.toordinal() - (734123 - 40529)
         adj_t = dtime.time()
-        self.time = (adj_t.hour + adj_t.minute / 60.0 + adj_t.second / 3600.0) / 24.0
+        self.time = (
+            adj_t.hour + adj_t.minute / 60.0 + adj_t.second / 3600.0
+        ) / 24.0
 
         self.timezone = 0
         offset = dtime.utcoffset()
-        if not offset is None:
+        if offset is not None:
             self.timezone = offset.seconds / 3600.0
 
     def __calc(self):
@@ -468,15 +474,21 @@ class Sun:
         julian_day = self.day + 2415018.5 + self.time - self.timezone / 24
         julian_century = (julian_day - 2451545) / 36525
         gmls = (
-            280.46646 + julian_century * (36000.76983 + julian_century * 0.0003032)
+            280.46646
+            + julian_century * (36000.76983 + julian_century * 0.0003032)
         ) % 360
-        gmas = 357.52911 + julian_century * (35999.05029 - 0.0001537 * julian_century)
+        gmas = 357.52911 + julian_century * (
+            35999.05029 - 0.0001537 * julian_century
+        )
         eeo = 0.016708634 - julian_century * (
             0.000042037 + 0.0000001267 * julian_century
         )
         seqcent = (
             sin(rad(gmas))
-            * (1.914602 - julian_century * (0.004817 + 0.000014 * julian_century))
+            * (
+                1.914602
+                - julian_century * (0.004817 + 0.000014 * julian_century)
+            )
             + sin(rad(2 * gmas)) * (0.019993 - 0.000101 * julian_century)
             + sin(rad(3 * gmas)) * 0.000289
         )
@@ -493,7 +505,11 @@ class Sun:
                 + (
                     21.448
                     - julian_century
-                    * (46.815 + julian_century * (0.00059 - julian_century * 0.001813))
+                    * (
+                        46.815
+                        + julian_century
+                        * (0.00059 - julian_century * 0.001813)
+                    )
                 )
                 / 60
             )
@@ -514,7 +530,9 @@ class Sun:
                 - tan(rad(self.lat)) * tan(rad(sdec))
             )
         )
-        self.solarnoon_t = (720 - 4 * self.long - t_eq + self.timezone * 60) / 1440
+        self.solarnoon_t = (
+            720 - 4 * self.long - t_eq + self.timezone * 60
+        ) / 1440
         self.sunrise_t = (self.solarnoon_t * 1440 - ha_srise * 4) / 1440
         self.sunset_t = (self.solarnoon_t * 1440 + ha_srise * 4) / 1440
         self.daylength_t = self.sunset_t - self.sunrise_t
@@ -548,9 +566,12 @@ def rh_to_vpress(rel_humidity, temp):
         2396.4,
         2381.9,
     )
-    nearest_t_idx = min(range(len(t_base)), key=lambda i: abs(t_base[i] - (temp)))
+    nearest_t_idx = min(
+        range(len(t_base)), key=lambda i: abs(t_base[i] - (temp))
+    )
     vps = 6.11 * exp(
-        ((hvap[nearest_t_idx] * 1e3) / 461) * (1 / 273.15 - 1 / (temp + 273.15))
+        ((hvap[nearest_t_idx] * 1e3) / 461)
+        * (1 / 273.15 - 1 / (temp + 273.15))
     )
     vapour_pressure = vps * (rel_humidity / 100)
     return vapour_pressure
@@ -630,7 +651,9 @@ def find_closest_point(points, x_coord, y_coord):
     closest_point = None
     closest_distance = float("inf")
     for point in points:
-        distance = math.sqrt((point["x"] - x_coord) ** 2 + (point["y"] - y_coord) ** 2)
+        distance = math.sqrt(
+            (point["x"] - x_coord) ** 2 + (point["y"] - y_coord) ** 2
+        )
         if distance < closest_distance:
             closest_distance = distance
             closest_point = point
@@ -668,9 +691,9 @@ def water_conductivity(matric_potential, theta_r, theta_s, alpha, npar, k_sat):
     theta = water_retention(matric_potential, theta_r, theta_s, alpha, npar)
     m_coeff = 1 - 1 / npar
     w_content = (theta - theta_r) / (theta_s - theta_r)
-    se_l = (
-        w_content**0.5
-    )  # parameter describing the pore structure of the material usually set to 0.5
+    se_l = w_content**0.5
+    # parameter describing the pore structure of the material usually
+    # set to 0.5
     se_m = w_content ** (1 / m_coeff)
     se_fact = (1 - se_m) ** m_coeff
     k_rel = se_l * (1 - se_fact) * (1 - se_fact)
@@ -738,7 +761,12 @@ def get_dtm_values(parcel_os_code, app_config):
         conn.autocommit = True
         cur = conn.cursor()
         sql = f"""
-            SELECT terrain.x, terrain.y, terrain.val, terrain.slope, terrain.aspect
+            SELECT
+                terrain.x,
+                terrain.y,
+                terrain.val,
+                terrain.slope,
+                terrain.aspect
             FROM dtm.dtm_slope_aspect AS terrain
             WHERE terrain.x BETWEEN {lon_min} AND {lon_max}
             AND terrain.y BETWEEN {lat_min} AND {lat_max};
@@ -749,7 +777,9 @@ def get_dtm_values(parcel_os_code, app_config):
         lat_lst = [x[1] for x in sql_return]
         closest_lon, closest_lat = nearest(lon, lon_lst), nearest(lat, lat_lst)
         ind = [
-            i for i, x in enumerate(sql_return) if x[0:2] == (closest_lon, closest_lat)
+            i
+            for i, x in enumerate(sql_return)
+            if x[0:2] == (closest_lon, closest_lat)
         ]
         dtm_vals = sql_return[ind[0]]
         dict_keys = ["x", "y", "elevation", "slope", "aspect"]
@@ -800,9 +830,14 @@ def find_contiguous_sets(data_frame, col_name):
         {"value": data_frame[col_name], "tag": data_frame[col_name] >= 0}
     )
 
-    first = pd_input.index[pd_input["tag"] & ~pd_input["tag"].shift(1).fillna(False)]
+    first = pd_input.index[
+        pd_input["tag"] & ~pd_input["tag"].shift(1).fillna(False)
+    ]
     last = (
-        pd_input.index[pd_input["tag"] & ~pd_input["tag"].shift(-1).fillna(False)] + 1
+        pd_input.index[
+            pd_input["tag"] & ~pd_input["tag"].shift(-1).fillna(False)
+        ]
+        + 1
     )
     tuple_list = list(zip(first, last))
     max_index = max(end for _, end in tuple_list)

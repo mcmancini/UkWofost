@@ -17,12 +17,19 @@ It contains the following:
 Any other soil data source will have its own child class defined here
 """
 from math import log10
+
 import numpy as np
-from rosetta import rosetta, SoilData
-from soiltexture import getTexture
 import xarray as xr
+from rosetta import SoilData, rosetta
+from soiltexture import getTexture
+
 from ukwofost.core import app_config
-from ukwofost.core.utils import osgrid2lonlat, water_retention, water_conductivity, nearest
+from ukwofost.core.utils import (
+    nearest,
+    osgrid2lonlat,
+    water_conductivity,
+    water_retention,
+)
 
 
 class SoilDataProvider(dict):
@@ -64,12 +71,16 @@ class SoilDataProvider(dict):
         k_0 = 10 ** mean[0][4]
         psi = list(np.arange(0, 6.1, 0.1).tolist())
         psi = [-1] + psi  # saturation
-        water_ret = [water_retention(x, theta_r, theta_s, alpha, npar) for x in psi]
+        water_ret = [
+            water_retention(x, theta_r, theta_s, alpha, npar) for x in psi
+        ]
         water_cond = [
-            water_conductivity(x, theta_r, theta_s, alpha, npar, k_0) for x in psi
+            water_conductivity(x, theta_r, theta_s, alpha, npar, k_0)
+            for x in psi
         ]
         smtab = [x for pair in zip(psi, water_ret) for x in pair]
-        # Permanent wilting point conventianally at 1500 kPa, fc between 10-30kPa
+        # Permanent wilting point conventianally at 1500 kPa, fc
+        # between 10-30kPa
         wp_idx = psi.index(nearest(self._WILTING_POTENTIAL, psi))
         fc_idx = psi.index(nearest(self._FIELD_CAPACITY, psi))
         smw = water_ret[wp_idx]
@@ -78,7 +89,9 @@ class SoilDataProvider(dict):
         contab = [x for pair in zip(psi, water_cond) for x in pair]
         # Provide soil texture given percentage of sand and clay
         solnam = getTexture(
-            soil_texture_list[0], soil_texture_list[2], classification="INTERNATIONAL"
+            soil_texture_list[0],
+            soil_texture_list[2],
+            classification="INTERNATIONAL",
         )
 
         return {
@@ -148,7 +161,7 @@ class SoilGridsDataProvider(SoilDataProvider):
         """
         lon, lat = osgrid2lonlat(osgrid_code, epsg=4326)
         soil_array = xr.open_dataset(SoilGridsDataProvider._SOIL_PATH)
-        
+
         soil_df = (
             soil_array.sel(x=lon, y=lat, method="nearest")
             .to_dataframe()
@@ -159,24 +172,21 @@ class SoilGridsDataProvider(SoilDataProvider):
         while soil_df.isna().any().any():
             min_lon, max_lon = lon - search_radius, lon + search_radius
             min_lat, max_lat = lat - search_radius, lat + search_radius
-             # Approx. 500m in degrees
+            # Approx. 500m in degrees
             nearby_cells = soil_array.sel(
-                x=slice(min_lon, max_lon),
-                y=slice(max_lat, min_lat)
+                x=slice(min_lon, max_lon), y=slice(max_lat, min_lat)
             )
-            mask = nearby_cells['sand'].notnull()
+            mask = nearby_cells["sand"].notnull()
             if not mask.any():
                 search_radius += 0.005
                 continue
 
             available_cells = nearby_cells.where(mask, drop=True)
-            soil_df = (available_cells
-                .to_dataframe()
-                .reset_index()[self._DEFAULT_SOILVARS]
-            )
+            soil_df = available_cells.to_dataframe().reset_index()[
+                self._DEFAULT_SOILVARS
+            ]
             soil_df = soil_df.dropna()
             search_radius += 0.001
-
 
         # rosetta requires [%sand, %silt, %clay, bulk density, th33, th1500]
         # in this order. Last 3 optional
