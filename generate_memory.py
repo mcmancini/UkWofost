@@ -55,6 +55,8 @@ if __name__ == "__main__":
     YEARS_IN_MEMORY = 5
 
     memory = get_wofost_yields(
-        sim_start_time=START_YEAR, memory_length=YEARS_IN_MEMORY, parcel_ids=parcels
+        sim_start_time=START_YEAR,
+        memory_length=YEARS_IN_MEMORY,
+        parcel_ids=parcels
     )
     memory.to_netcdf("memory.nc")

@@ -20,7 +20,9 @@ SOILSOURCE = "SoilGrids"
 
 # CROP PARAMETERS
 # pylint: disable=E1101
-cropd = YAMLCropDataProvider(app_config.data_dirs["crop_dir"], force_reload=True)
+cropd = YAMLCropDataProvider(
+    app_config.data_dirs["crop_dir"], force_reload=True
+)
 
 # SITE PARAMETERS
 sitedata = WOFOST80SiteDataProvider(

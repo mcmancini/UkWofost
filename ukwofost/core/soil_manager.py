@@ -24,8 +24,12 @@ from rosetta import SoilData, rosetta
 from soiltexture import getTexture
 
 from ukwofost.core import app_config
-from ukwofost.core.utils import (nearest, osgrid2lonlat, water_conductivity,
-                                 water_retention)
+from ukwofost.core.utils import (
+    nearest,
+    osgrid2lonlat,
+    water_conductivity,
+    water_retention,
+)
 
 
 class SoilDataProvider(dict):
@@ -67,12 +71,16 @@ class SoilDataProvider(dict):
         k_0 = 10 ** mean[0][4]
         psi = list(np.arange(0, 6.1, 0.1).tolist())
         psi = [-1] + psi  # saturation
-        water_ret = [water_retention(x, theta_r, theta_s, alpha, npar) for x in psi]
+        water_ret = [
+            water_retention(x, theta_r, theta_s, alpha, npar) for x in psi
+        ]
         water_cond = [
-            water_conductivity(x, theta_r, theta_s, alpha, npar, k_0) for x in psi
+            water_conductivity(x, theta_r, theta_s, alpha, npar, k_0)
+            for x in psi
         ]
         smtab = [x for pair in zip(psi, water_ret) for x in pair]
-        # Permanent wilting point conventianally at 1500 kPa, fc between 10-30kPa
+        # Permanent wilting point conventianally at 1500 kPa, fc
+        # between 10-30kPa
         wp_idx = psi.index(nearest(self._WILTING_POTENTIAL, psi))
         fc_idx = psi.index(nearest(self._FIELD_CAPACITY, psi))
         smw = water_ret[wp_idx]
@@ -81,7 +89,9 @@ class SoilDataProvider(dict):
         contab = [x for pair in zip(psi, water_cond) for x in pair]
         # Provide soil texture given percentage of sand and clay
         solnam = getTexture(
-            soil_texture_list[0], soil_texture_list[2], classification="INTERNATIONAL"
+            soil_texture_list[0],
+            soil_texture_list[2],
+            classification="INTERNATIONAL",
         )
 
         return {

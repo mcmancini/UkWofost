@@ -27,7 +27,8 @@ class ConfigReader:
 
     def get(self, value):
         """
-        Method to retrieve any value from an instance of the ConfigReader object
+        Method to retrieve any value from an instance of the ConfigReader
+        object
         """
         return getattr(self, value, {})
 
@@ -57,7 +58,8 @@ class ConfigReader:
         for section_name in config.sections():
             section = config[section_name]
             section_dict = {
-                key: os.path.expandvars(value) for key, value in section.items()
+                key: os.path.expandvars(value)
+                for key, value in section.items()
             }
             setattr(self, section_name, section_dict)
 

@@ -5,7 +5,6 @@
 """
 UkWofost package initialisation file
 """
-import os
 
 from ukwofost.core.config_parser import ConfigReader
 from ukwofost.utility.paths import ROOT_DIR

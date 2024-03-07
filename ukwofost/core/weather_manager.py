@@ -23,9 +23,15 @@ from pcse.settings import settings
 from pcse.util import check_angstromAB, reference_ET
 
 from ukwofost.core import app_config
-from ukwofost.core.utils import (calc_doy, find_closest_point, get_dtm_values,
-                                 lonlat2osgrid, nearest, osgrid2lonlat,
-                                 rh_to_vpress)
+from ukwofost.core.utils import (
+    calc_doy,
+    find_closest_point,
+    get_dtm_values,
+    lonlat2osgrid,
+    nearest,
+    osgrid2lonlat,
+    rh_to_vpress,
+)
 
 # from ukwofost.db_manager import get_parcel_data, get_dtm_values
 
@@ -70,20 +76,22 @@ def w_to_j(x):
 class NetCDFWeatherDataProvider(WeatherDataProvider):
     """Reading weather data from a NetCDF file (.nc).
 
-    :param osgrid_code: code of the OS tile for which weather projections are required
+    :param osgrid_code: code of the OS tile for which weather projections are
+        required
     :param rcp: the rcp scenario for which weather projections are required
-    :param ensemble: the ensemble for the rcp for which weather projections are required
-    :param mising_snow_depth: the value that should use for missing SNOW_DEPTH values,
-           the default value is `None`.
-    :param force_update: bypass the cache file, reload data from the netcdf files and
-           write a new cache file. Cache files are written under
+    :param ensemble: the ensemble for the rcp for which weather projections
+        are required
+    :param mising_snow_depth: the value that should use for missing SNOW_DEPTH
+        values, the default value is `None`.
+    :param force_update: bypass the cache file, reload data from the netcdf
+        files and write a new cache file. Cache files are written under
            `$HOME/.pcse/meteo_cache`
 
-    The NetCDFWeatherDataProvider takes care of the adjustment of solar radiation to the
-    length of the day (AAA: need to verify that the solar radiation data passed to
-    compute ETs is the data expected by the functions implemented in Wofost!!!) and
-    deals with the fact that the length of a year in ChessScape is 360 days, which
-    Wofost cannot handle.
+    The NetCDFWeatherDataProvider takes care of the adjustment of solar
+    radiation to the length of the day (AAA: need to verify that the solar
+    radiation data passed to compute ETs is the data expected by the functions
+    implemented in Wofost!!!) and deals with the fact that the length of a
+    year in ChessScape is 360 days, which Wofost cannot handle.
     """
 
     obs_conversions = {
@@ -134,10 +142,10 @@ class NetCDFWeatherDataProvider(WeatherDataProvider):
             msg = f"Cannot find weather file at: {self.nc_fname}"
             raise PCSEError(msg)
 
-        self.longitude, self.latitude = osgrid2lonlat(self.osgrid_1km, epsg=4326)
+        self.longitude, self.latitude = osgrid2lonlat(
+            self.osgrid_1km, epsg=4326
+        )
 
-        # Retrieve altitude
-        # self.elevation = get_parcel_data(osgrid_code, ['elevation'])['elevation']
         self.elevation = get_dtm_values(osgrid_code, app_config)["elevation"]
         # pylint: enable=E1101
 
@@ -166,7 +174,8 @@ class NetCDFWeatherDataProvider(WeatherDataProvider):
         # If loading fails retrieve data from the Chess-Scape nc files.
 
         age = (
-            dt.date.today() - dt.date.fromtimestamp(os.stat(cache_file).st_mtime)
+            dt.date.today()
+            - dt.date.fromtimestamp(os.stat(cache_file).st_mtime)
         ).days
         if age < 90:
             self.logger.debug(
@@ -222,16 +231,20 @@ class NetCDFWeatherDataProvider(WeatherDataProvider):
         os_array = xr.open_dataset(self.nc_fname)
 
         os_dataframe = (
-            os_array.sel(x=lon, y=lat, method="nearest").to_dataframe().reset_index()
+            os_array.sel(x=lon, y=lat, method="nearest")
+            .to_dataframe()
+            .reset_index()
         )
-        # There is  a posibility that the assignment of weather data to parcels
-        # near the coastline could result in empty data (nan). This is because the
-        # .sel("closest") method in xarray is based on the x-y coordinates,
-        # regardless of whether the arrays at those coordinates are
-        # empty or not. Deal with this selecting the closest non-null cell.
-        # (Euclidean distance)
+        # There is  a posibility that the assignment of weather data to
+        # parcels near the coastline could result in empty data (nan).
+        # This is because the.sel("closest") method in xarray is based
+        # on the x-y coordinates, regardless of whether the arrays at
+        # those coordinates are empty or not. Deal with this selecting
+        # the closest non-null cell.(Euclidean distance)
         if os_dataframe.isnull().any().any():
-            os_array.sel(x=lon, y=lat, method="nearest").to_dataframe().reset_index()
+            os_array.sel(
+                x=lon, y=lat, method="nearest"
+            ).to_dataframe().reset_index()
             os_dataframe = (
                 os_array.where(
                     (os_array.x >= lon - 10000)
@@ -245,7 +258,9 @@ class NetCDFWeatherDataProvider(WeatherDataProvider):
             )
             os_dataframe = os_dataframe.dropna()
             unique_combinations = (
-                os_dataframe[["y", "x"]].drop_duplicates().to_dict(orient="records")
+                os_dataframe[["y", "x"]]
+                .drop_duplicates()
+                .to_dict(orient="records")
             )
             closest = find_closest_point(unique_combinations, lon, lat)
             os_dataframe = os_dataframe[
@@ -277,7 +292,10 @@ class NetCDFWeatherDataProvider(WeatherDataProvider):
         for day in missing_days:
             nearest_day = nearest(day, os_dataframe.index)
             nearest_vals = (
-                os_dataframe.loc[nearest_day, :].to_frame().transpose().reset_index()
+                os_dataframe.loc[nearest_day, :]
+                .to_frame()
+                .transpose()
+                .reset_index()
             )
             nearest_vals["index"] = day
             nearest_vals.set_index("index", inplace=True)
@@ -317,8 +335,9 @@ class NetCDFWeatherDataProvider(WeatherDataProvider):
                     # will be thrown
                     value = climate_data.iloc[row, :][label]
 
-                    # Check for observations marked as missing. Currently only missing
-                    # data is allowed for SNOWDEPTH. Otherwise raise an error
+                    # Check for observations marked as missing. Currently only
+                    # missing data is allowed for SNOWDEPTH. Otherwise raise
+                    # an error
                     if self._is_missing_value(value):
                         if label == "SNOWDEPTH":
                             value = self.missing_snow_depth
@@ -356,8 +375,8 @@ class NetCDFWeatherDataProvider(WeatherDataProvider):
     def _find_cache_file(self, cache_fname):
         """Try to find a cache file for given latitude/longitude.
 
-        Returns None if the cache file does not exist, else it returns the full path
-        to the cache file.
+        Returns None if the cache file does not exist, else it returns the
+        full path to the cache file.
         """
         cache_filename = self._get_cache_filename(cache_fname)
         if os.path.exists(cache_filename):
@@ -365,10 +384,11 @@ class NetCDFWeatherDataProvider(WeatherDataProvider):
         return None
 
     def _get_cache_filename(self, cache_fname):
-        """Constructs the filename used for cache files given latitude and longitude
-
-        The file name is constructed combining the class name, the OS 1km tile
-        code, the rcp code and the ensemble
+        """
+        Constructs the filename used for cache files given latitude and
+        longitude
+        The file name is constructed combining the class name, the OS 1km
+        tile code, the rcp code and the ensemble
         (i.e.: NetCDFWeatherDataProvider_SX7347_rcp26_01.cache)
         """
         fname = f"{self.__class__.__name__}_{cache_fname}.cache"
@@ -386,12 +406,16 @@ class NetCDFWeatherDataProvider(WeatherDataProvider):
             self.logger.debug(msg)
             return True
         except (IOError, EnvironmentError, EOFError) as e:
-            msg = f"Failed to load cache from file '{cache_filename}' due to: {e}"
+            msg = (
+                f"Failed to load cache from file "
+                f"'{cache_filename}' due to: {e}"
+            )
             self.logger.warning(msg)
             return False
 
     def _is_missing_value(self, value):
-        """Checks if value is equal to the value specified for missing date
+        """
+        Checks if value is equal to the value specified for missing date
         :return: True|False
         """
         eps = 0.0001
@@ -491,9 +515,10 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
 
     def _create_header(self):
         country = "Great Britain"
+        location = lonlat2osgrid((self.longitude, self.latitude), figs=8)
         desc = (
             f"Downscaled weather for parcel '{self.parcel_id}' at "
-            f"location '{lonlat2osgrid((self.longitude, self.latitude), figs=8)}'"
+            f"location '{location}'"
         )
         src = "Environment and Sustainability Institute, University of Exeter"
         contact = (
@@ -519,7 +544,9 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
 
     # pylint: disable=W4902, R0914
     def _read_observations(self, csv_file, delimiter):
-        """Processes the rows with meteo data and converts into the correct units."""
+        """
+        Processes the rows with meteo data and converts into the correct units.
+        """
         obs = csv.DictReader(csv_file, delimiter=delimiter, quotechar='"')
         keys_to_remove = [
             "tasmean",
@@ -538,7 +565,9 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
                 renamed_d[new_name] = d.pop(old_name)
 
             renamed_d["SNOWDEPTH"] = np.nan
-            renamed_d["VAP"] = rh_to_vpress(float(d["hurs"]), float(d["tasmean"]))
+            renamed_d["VAP"] = rh_to_vpress(
+                float(d["hurs"]), float(d["tasmean"])
+            )
             renamed_d["IRRAD"] = float(d["swdown"]) + float(d["lwdown"])
 
             # Merge with the remaining data
@@ -578,7 +607,10 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
                 row["ET0"] = et0 / 10.0
 
                 wdc = WeatherDataContainer(
-                    LAT=self.latitude, LON=self.longitude, ELEV=self.elevation, **row
+                    LAT=self.latitude,
+                    LON=self.longitude,
+                    ELEV=self.elevation,
+                    **row,
                 )
                 self._store_WeatherDataContainer(wdc, day)
             except (ParseError, KeyError):
@@ -631,7 +663,9 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
         try:
             self._dump(cache_filename)
         except (IOError, EnvironmentError) as e:
-            msg = f"Failed to write cache to file '{cache_filename}' due to: {e}"
+            msg = (
+                f"Failed to write cache to file '{cache_filename}' due to: {e}"
+            )
             self.logger.warning(msg)
 
     # pylint: enable=R0913,C0103,R0902
