@@ -22,7 +22,12 @@ from rosetta import rosetta, SoilData
 from soiltexture import getTexture
 import xarray as xr
 from ukwofost.core import app_config
-from ukwofost.core.utils import osgrid2lonlat, water_retention, water_conductivity, nearest
+from ukwofost.core.utils import (
+    osgrid2lonlat,
+    water_retention,
+    water_conductivity,
+    nearest,
+)
 
 
 class SoilDataProvider(dict):
@@ -148,7 +153,7 @@ class SoilGridsDataProvider(SoilDataProvider):
         """
         lon, lat = osgrid2lonlat(osgrid_code, epsg=4326)
         soil_array = xr.open_dataset(SoilGridsDataProvider._SOIL_PATH)
-        
+
         soil_df = (
             soil_array.sel(x=lon, y=lat, method="nearest")
             .to_dataframe()
@@ -159,24 +164,21 @@ class SoilGridsDataProvider(SoilDataProvider):
         while soil_df.isna().any().any():
             min_lon, max_lon = lon - search_radius, lon + search_radius
             min_lat, max_lat = lat - search_radius, lat + search_radius
-             # Approx. 500m in degrees
+            # Approx. 500m in degrees
             nearby_cells = soil_array.sel(
-                x=slice(min_lon, max_lon),
-                y=slice(max_lat, min_lat)
+                x=slice(min_lon, max_lon), y=slice(max_lat, min_lat)
             )
-            mask = nearby_cells['sand'].notnull()
+            mask = nearby_cells["sand"].notnull()
             if not mask.any():
                 search_radius += 0.005
                 continue
 
             available_cells = nearby_cells.where(mask, drop=True)
-            soil_df = (available_cells
-                .to_dataframe()
-                .reset_index()[self._DEFAULT_SOILVARS]
-            )
+            soil_df = available_cells.to_dataframe().reset_index()[
+                self._DEFAULT_SOILVARS
+            ]
             soil_df = soil_df.dropna()
             search_radius += 0.001
-
 
         # rosetta requires [%sand, %silt, %clay, bulk density, th33, th1500]
         # in this order. Last 3 optional
