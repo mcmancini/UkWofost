@@ -8,6 +8,7 @@ agromanagment. This could be a standard agromanagement (contained
 in a yaml file to be parsed with the ConfigReader in config_parser.py)
 """
 import datetime as dt
+
 import pandas as pd
 import yaml
 
@@ -58,7 +59,8 @@ class Crop:
             Multiple grass defoliation events can be defined.
     : param 'num_years' for grassland: Duration in years of the grassland
             crop. If grass is in a rotation with other crops, then the crops
-            after grassland need to be planted after 'num_years' of the grassland
+            after grassland need to be planted after 'num_years' of the
+            grassland
     Any other parameter in the agromanagement can be overwritten: e.g.:
     : param 'crop_start_date': sowing date of a crop (dt.date format)
     : param 'crop_end_date': harvest time if timed, rather than dependent
@@ -107,7 +109,9 @@ class Crop:
         # Variety
         if self.crop.lower() != "fallow":
             if "variety" not in args or args["variety"] is None:
-                raise ValueError("Missing argument: 'variety' argument is required.")
+                raise ValueError(
+                    "Missing argument: 'variety' argument is required."
+                )
             self.variety = args["variety"]
         else:
             self.variety = None
@@ -117,8 +121,8 @@ class Crop:
             if "crop_start_month" not in args and "crop_start_day" not in args:
                 raise ValueError(
                     f"Please provide a crop start date for {self.crop} as "
-                    f"kwargs['crop_start_day'] and kwargs['crop_start_month'] or "
-                    f"kwargs['crop_start_date']"
+                    f"kwargs['crop_start_day'] and kwargs['crop_start_month'] "
+                    f"or kwargs['crop_start_date']"
                 )
             crop_start_date = dt.date(
                 self.calendar_year,
@@ -138,8 +142,10 @@ class Crop:
                 "comment": "All fertilizer amounts in kg/ha",
                 "line_template": (
                     "- {timing}: {{N_amount: {event[N_amount]}, "
-                    "P_amount: {event[P_amount]}, K_amount: {event[K_amount]},"
-                    "N_recovery: {args[N_recovery]}, P_recovery: {args[P_recovery]}, "
+                    "P_amount: {event[P_amount]}, "
+                    "K_amount: {event[K_amount]}, "
+                    "N_recovery: {args[N_recovery]}, "
+                    "P_recovery: {args[P_recovery]}, "
                     "K_recovery: {args[K_recovery]}}}"
                 ),
             },
@@ -148,7 +154,8 @@ class Crop:
                 "name": "Schedule a grass mowing event",
                 "comment": "Remaining biomass in kg/ha",
                 "line_template": (
-                    "- {timing}: {{biomass_remaining: {event[biomass_remaining]}}}"
+                    "- {timing}: {{biomass_remaining: "
+                    "{event[biomass_remaining]}}}"
                 ),
             },
         }
@@ -220,15 +227,19 @@ class Crop:
         """
         if "winter" in variety.lower():
             if "date" not in event:
-                timing = dt.date(crop_start_date.year + 1, event["month"], event["day"])
+                timing = dt.date(
+                    crop_start_date.year + 1, event["month"], event["day"]
+                )
             else:
                 timing = event["date"]
         else:
             if "date" not in event:
-                timing = dt.date(crop_start_date.year, event["month"], event["day"])
+                timing = dt.date(
+                    crop_start_date.year, event["month"], event["day"]
+                )
                 if timing < crop_start_date:
-                    # this deals with a crop calendar year starting in the fall and
-                    # timing events in the following year
+                    # this deals with a crop calendar year starting in the
+                    # fall and timing events in the following year
                     timing = timing.replace(year=timing.year + 1)
             else:
                 timing = event["date"]
@@ -440,7 +451,9 @@ class CropBuilder:
                     crop_params[param] = sample[param]
 
         # generate fertilisation structure if present
-        num_fertilisations = sum(sample.index.str.match(r"NPK_T\d+") & ~sample.isna())
+        num_fertilisations = sum(
+            sample.index.str.match(r"NPK_T\d+") & ~sample.isna()
+        )
         num_nutrients = sum(sample.index.str.match(r"N_\d+") & ~sample.isna())
 
         if num_nutrients != num_fertilisations:

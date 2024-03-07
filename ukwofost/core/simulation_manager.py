@@ -15,16 +15,17 @@ from pcse.base import ParameterProvider
 # from pcse.models import Wofost80_NWLP_FD_beta
 # from pcse.models import Wofost72_WLP_FD, LINGRA_WLP_FD
 from pcse.db.nasapower import NASAPowerWeatherDataProvider
-from pcse.models import Wofost80_NWLP_FD_beta, LINGRA_WLP_FD
+from pcse.models import LINGRA_WLP_FD, Wofost80_NWLP_FD_beta
+
 from ukwofost.core.crop_manager import Crop, CropRotation
 from ukwofost.core.defaults import defaults, wofost_parameters
 from ukwofost.core.parcel import Parcel
+from ukwofost.core.soil_manager import SoilGridsDataProvider
+from ukwofost.core.utils import osgrid2lonlat
 from ukwofost.core.weather_manager import (
     NetCDFWeatherDataProvider,
     ParcelWeatherDataProvider,
 )
-from ukwofost.core.utils import osgrid2lonlat
-from ukwofost.core.soil_manager import SoilGridsDataProvider
 
 
 # pylint: disable=R0902
@@ -178,19 +179,25 @@ class WofostSimulator:
     # pylint: disable=R0913
     def _build_weather(self):
         if self.weather_provider == "NASA":
-            wdp = NASAPowerWeatherDataProvider(latitude=self.lat, longitude=self.lon)
+            wdp = NASAPowerWeatherDataProvider(
+                latitude=self.lat, longitude=self.lon
+            )
         elif self.weather_provider == "Chess":
-            wdp = NetCDFWeatherDataProvider(self.osgrid_code, self._rcp, self._ensemble)
+            wdp = NetCDFWeatherDataProvider(
+                self.osgrid_code, self._rcp, self._ensemble
+            )
         elif self.weather_provider == "Custom":
             if isinstance(self._parcel, str):
                 raise TypeError(
-                    "Custom weather data can only be retrieved for parcels and not for"
-                    " geographic coordinates"
+                    "Custom weather data can only be retrieved for parcels "
+                    "and not for geographic coordinates"
                 )
             wdp = ParcelWeatherDataProvider(parcel=self._parcel)
         else:
             wdp = None
-            raise ValueError("weather provider can only be 'NASA', 'Chess' or 'Custom'")
+            raise ValueError(
+                "weather provider can only be 'NASA', 'Chess' or 'Custom'"
+            )
         return wdp
 
     # pylint: enable=R0913
@@ -204,7 +211,9 @@ class WofostSimulator:
             raise ValueError("WHSD soil data provider not yet implemented")
         else:
             soildata = None
-            raise ValueError("Soil data provider can only be 'SoilGrids' or 'WHSD'")
+            raise ValueError(
+                "Soil data provider can only be 'SoilGrids' or 'WHSD'"
+            )
         return soildata
 
     def run(self, crop_or_rotation, **kwargs):
@@ -223,11 +232,15 @@ class WofostSimulator:
                which is then passed to this method
         """
         if isinstance(crop_or_rotation, Crop):
-            self.cropd.set_active_crop(crop_or_rotation.crop, crop_or_rotation.variety)
+            self.cropd.set_active_crop(
+                crop_or_rotation.crop, crop_or_rotation.variety
+            )
 
             # COMBINE ALL PARAMETERS
             parameters = ParameterProvider(
-                cropdata=self.cropd, soildata=self.soildata, sitedata=self.sitedata
+                cropdata=self.cropd,
+                soildata=self.soildata,
+                sitedata=self.sitedata,
             )
 
             self._override_defaults(parameters, kwargs)
@@ -257,12 +270,16 @@ class WofostSimulator:
             self.cropd.set_active_crop(crop_name, crop_variety)
 
             parameters = ParameterProvider(
-                cropdata=self.cropd, soildata=self.soildata, sitedata=self.sitedata
+                cropdata=self.cropd,
+                soildata=self.soildata,
+                sitedata=self.sitedata,
             )
 
             self._override_defaults(parameters, kwargs)
 
-            wofsim = Wofost80_NWLP_FD_beta(parameters, self.wdp, agromanagement)
+            wofsim = Wofost80_NWLP_FD_beta(
+                parameters, self.wdp, agromanagement
+            )
             try:
                 wofsim.run_till_terminate()
             # pylint: disable=W0718
@@ -282,9 +299,9 @@ class WofostSimulator:
 
     def _override_defaults(self, default_parameters, item):
         """
-        Method to override the wofost parameters not associated with agromanagement.
-        The list of such parameters is declared as a class attribute of the
-        WofostSimulator class
+        Method to override the wofost parameters not associated with.
+        agromanagement. The list of such parameters is declared as a
+        class attribute of the WofostSimulator class
         """
         default_parameters.clear_override()
         for key, value in item.items():
@@ -297,7 +314,12 @@ class WofostSimulator:
         msg = "======================================================\n"
         msg += "               Simulator characteristics\n"
         msg += "---------------------Description----------------------\n"
-        msg += "Wofost simulator for location at '" + self.osgrid_code + "'" + "\n"
+        msg += (
+            "Wofost simulator for location at '"
+            + self.osgrid_code
+            + "'"
+            + "\n"
+        )
         msg += "Longitude: " + str(self.lon) + "\n"
         msg += "Latitude: " + str(self.lat) + "\n"
         msg += "Elevation: " + str(round(self.wdp.elevation, 2)) + "\n"

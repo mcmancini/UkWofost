@@ -84,8 +84,8 @@ def run_rotations(input_sample_df, output_filename):
                         f"Running simulator for '{rotation}' and iteration "
                         f"'{str(item)}' in location '{os_code}'"
                     )
-                    # Deal with parameters overridden by user (e.g., initial soil
-                    # conditions, or Wofost crop parameters)
+                    # Deal with parameters overridden by user (e.g., initial
+                    # soil conditions, or Wofost crop parameters)
                     parameter_dict = item_df.iloc[0, :].to_dict()
                     nonstandard_parameters = {
                         key: value
@@ -100,7 +100,9 @@ def run_rotations(input_sample_df, output_filename):
                         crop_args = CropBuilder(row)
                         crop_params = crop_args.crop_parameters
                         crop = Crop(
-                            crop_args.calendar_year, crop_args.crop, **crop_params
+                            crop_args.calendar_year,
+                            crop_args.crop,
+                            **crop_params
                         )
                         crops_in_rotation.append(crop)
 
@@ -112,7 +114,9 @@ def run_rotations(input_sample_df, output_filename):
                     rotation_output["lon"], rotation_output["lat"] = lon, lat
                     rotation_output["rotation"] = rotation
                     rotation_output["iteration"] = item
-                    crop_list = [list(d.keys())[0] for d in crop_rotation.crop_list]
+                    crop_list = [
+                        list(d.keys())[0] for d in crop_rotation.crop_list
+                    ]
                     crop_indices = find_contiguous_sets(rotation_output, "LAI")
                     crop_column = [
                         crop_list[index - 1] if index > 0 else "fallow"
@@ -143,16 +147,25 @@ def run_rotations(input_sample_df, output_filename):
 # pylint: disable=R0914
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run the Wofost Crop yield simulator")
+    parser = argparse.ArgumentParser(
+        description="Run the Wofost Crop yield simulator"
+        )
     parser.add_argument(
-        "-i", "--input", type=str, required=True, help="Path to the input CSV file"
+        "-i",
+        "--input",
+        type=str,
+        required=True,
+        help="Path to the input CSV file"
     )
     parser.add_argument(
         "-o",
         "--output",
         type=str,
         required=True,
-        help="Path of the folder where the output CSV files will be saved",
+        help=(
+            "Path of the folder where the output CSV files"
+            "will be saved"
+        ),
     )
 
     args = parser.parse_args()
