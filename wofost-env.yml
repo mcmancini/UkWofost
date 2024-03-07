@@ -4,6 +4,7 @@ channels:
   - defaults
 dependencies:
   - black
+  - flake8
   - netcdf4
   - numpy
   - pandas
