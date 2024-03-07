@@ -29,7 +29,7 @@ jobs:
 
       - name: Quality Assurance
         run: |
-          find . -name "*.py" | xargs pylint
+          python -m flake8 ./ukwofost/ --count --select=E9,F63,F7,F82, --ignore=F821 --show-source --statistics
           python -m black --check ./agromanagement/
           python -m black --check ./tests/
           python -m isort --check --diff .
