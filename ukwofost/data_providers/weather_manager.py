@@ -23,9 +23,15 @@ from pcse.settings import settings
 from pcse.util import check_angstromAB, reference_ET
 
 from ukwofost.core import app_config
-from ukwofost.core.utils import (calc_doy, find_closest_point, get_dtm_values,
-                                 lonlat2osgrid, nearest, osgrid2lonlat,
-                                 rh_to_vpress)
+from ukwofost.core.utils import (
+    calc_doy,
+    find_closest_point,
+    get_dtm_values,
+    lonlat2osgrid,
+    nearest,
+    osgrid2lonlat,
+    rh_to_vpress,
+)
 
 # from ukwofost.db_manager import get_parcel_data, get_dtm_values
 

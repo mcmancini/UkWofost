@@ -11,6 +11,7 @@ space
 
 import pandas as pd
 from pcse.base import ParameterProvider
+
 # from pcse.models import Wofost80_NWLP_FD_beta
 # from pcse.models import Wofost72_WLP_FD, LINGRA_WLP_FD
 from pcse.db.nasapower import NASAPowerWeatherDataProvider
@@ -21,9 +22,11 @@ from ukwofost.core.defaults import defaults, wofost_parameters
 from ukwofost.core.parcel import Parcel
 from ukwofost.core.utils import osgrid2lonlat
 from ukwofost.data_providers.soil_manager import SoilGridsDataProvider
-from ukwofost.data_providers.weather_manager import (Era5WeatherDataProvider,
-                                                     NetCDFWeatherDataProvider,
-                                                     ParcelWeatherDataProvider)
+from ukwofost.data_providers.weather_manager import (
+    Era5WeatherDataProvider,
+    NetCDFWeatherDataProvider,
+    ParcelWeatherDataProvider,
+)
 
 
 # pylint: disable=R0902
@@ -264,9 +267,7 @@ class WofostSimulator:
                 return summary_output[0]["WeightHARV"]
 
             # wofsim = Wofost72_WLP_FD(parameters, self.wdp, crop_rotation)
-            wofsim = Wofost80_NWLP_FD_beta(
-                parameters, self.wdp, crop_rotation
-            )
+            wofsim = Wofost80_NWLP_FD_beta(parameters, self.wdp, crop_rotation)
             wofsim.run_till_terminate()
             # Collect output
             summary_output = wofsim.get_summary_output()
