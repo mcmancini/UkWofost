@@ -24,12 +24,8 @@ from rosetta import SoilData, rosetta
 from soiltexture import getTexture
 
 from ukwofost.core import app_config
-from ukwofost.core.utils import (
-    nearest,
-    osgrid2lonlat,
-    water_conductivity,
-    water_retention,
-)
+from ukwofost.core.utils import (nearest, osgrid2lonlat, water_conductivity,
+                                 water_retention)
 
 
 class SoilDataProvider(dict):
