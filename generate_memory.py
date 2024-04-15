@@ -18,10 +18,10 @@ to the predefined length of the memory of the farmer of interest.
 import numpy as np
 from tqdm import tqdm
 import xarray as xr
-from ukwofost.crop_manager import Crop
-from ukwofost.crops import Crops
-from ukwofost.defaults import defaults
-from ukwofost.simulation_manager import WofostSimulator
+from ukwofost.core.crop_manager import Crop
+from ukwofost.core.crops import Crops
+from ukwofost.core.defaults import defaults
+from ukwofost.core.simulation_manager import WofostSimulator
 
 
 def get_wofost_yields(sim_start_time, memory_length, parcel_ids):
