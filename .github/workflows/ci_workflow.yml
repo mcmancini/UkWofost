@@ -29,8 +29,8 @@ jobs:
 
       - name: Quality Assurance
         run: |
-          python -m flake8 ./ukwofost/ --count --show-source --statistics
           python -m black --check ./ukwofost/
+          python -m flake8 ./ukwofost/ --count --show-source --statistics
           python -m isort --apply .
 
       # - name: Unit Testing

@@ -20,9 +20,10 @@ from pcse.models import LINGRA_WLP_FD, Wofost80_NWLP_FD_beta
 from ukwofost.core.crop_manager import Crop, CropRotation
 from ukwofost.core.defaults import defaults, wofost_parameters
 from ukwofost.core.parcel import Parcel
-from ukwofost.core.soil_manager import SoilGridsDataProvider
 from ukwofost.core.utils import osgrid2lonlat
-from ukwofost.core.weather_manager import (
+from ukwofost.data_providers.soil_manager import SoilGridsDataProvider
+from ukwofost.data_providers.weather_manager import (
+    Era5WeatherDataProvider,
     NetCDFWeatherDataProvider,
     ParcelWeatherDataProvider,
 )
@@ -43,9 +44,11 @@ class WofostSimulator:
     :param parcel: OS grid code of the location of interest
         or an instance of the Parcel class
     :param weather_provider (Str): either "Chess" (i.e., UKCEH
-        ChessScape UKCP18 1km), "Custom" (i.e., weather data
-        produced through data fusion and in csv format) or "NASA"
+        ChessScape UKCP18 1km), "Downscaled" (i.e., weather data
+        produced through data fusion and in csv format), "NASA"
         (i.e., the default WOFOST NASA historic weather data provider)
+        or "ERA5" (i.e., historic Copernicus ERA5 reanalysis data in
+        csv format)
     :param soil_provider: either "SoilGrids" or "WHSD", for SoilGrids
         soil data or World Harmonized Soil Database data. The latter
         does not yet have its data provider implemented, hence not
@@ -186,17 +189,25 @@ class WofostSimulator:
             wdp = NetCDFWeatherDataProvider(
                 self.osgrid_code, self._rcp, self._ensemble
             )
-        elif self.weather_provider == "Custom":
+        elif self.weather_provider == "Downscaled":
             if isinstance(self._parcel, str):
                 raise TypeError(
                     "Custom weather data can only be retrieved for parcels "
                     "and not for geographic coordinates"
                 )
             wdp = ParcelWeatherDataProvider(parcel=self._parcel)
+        elif self.weather_provider == "ERA5":
+            if isinstance(self._parcel, str):
+                raise TypeError(
+                    "Custom weather data can only be retrieved for parcels "
+                    "and not for geographic coordinates"
+                )
+            wdp = Era5WeatherDataProvider(parcel=self._parcel)
         else:
             wdp = None
             raise ValueError(
-                "weather provider can only be 'NASA', 'Chess' or 'Custom'"
+                "weather provider can only be 'NASA', "
+                "'Chess', 'Downscaled' or 'ERA5"
             )
         return wdp
 
