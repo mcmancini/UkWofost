@@ -203,7 +203,8 @@ class WofostSimulator:
         else:
             wdp = None
             raise ValueError(
-                "weather provider can only be 'NASA', 'Chess', 'Downscaled' or 'ERA5"
+                "weather provider can only be 'NASA', "
+                "'Chess', 'Downscaled' or 'ERA5"
             )
         return wdp
 
@@ -263,7 +264,9 @@ class WofostSimulator:
                 return summary_output[0]["WeightHARV"]
 
             # wofsim = Wofost72_WLP_FD(parameters, self.wdp, crop_rotation)
-            wofsim = Wofost80_NWLP_FD_beta(parameters, self.wdp, crop_rotation)
+            wofsim = Wofost80_NWLP_FD_beta(
+                parameters, self.wdp, crop_rotation
+            )
             wofsim.run_till_terminate()
             # Collect output
             summary_output = wofsim.get_summary_output()
