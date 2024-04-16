@@ -20,7 +20,7 @@ from pcse.models import LINGRA_WLP_FD, Wofost80_NWLP_FD_beta
 from ukwofost.core.crop_manager import Crop, CropRotation
 from ukwofost.core.defaults import defaults, wofost_parameters
 from ukwofost.core.parcel import Parcel
-from ukwofost.core.utils import osgrid2lonlat
+from ukwofost.core.utils import lonlat2osgrid, osgrid2lonlat
 from ukwofost.data_providers.soil_manager import SoilGridsDataProvider
 from ukwofost.data_providers.weather_manager import (
     Era5WeatherDataProvider,
@@ -41,8 +41,10 @@ class WofostSimulator:
     Input parameters for initialisation
     --------------------------------------------
 
-    :param parcel: OS grid code of the location of interest
-        or an instance of the Parcel class
+    :param location: This can be the following:
+        - OS grid code of the location of interest (str);
+        - an instance of the Parcel class (Parcel);
+        - a lon-lat pair into a tuple (tuple)
     :param weather_provider (Str): either "Chess" (i.e., UKCEH
         ChessScape UKCP18 1km), "Downscaled" (i.e., weather data
         produced through data fusion and in csv format), "NASA"
@@ -74,8 +76,8 @@ class WofostSimulator:
 
     wofost_params = wofost_parameters
 
-    def __init__(self, parcel, weather_provider, soil_provider, **kwargs):
-        self._parcel = parcel
+    def __init__(self, location, weather_provider, soil_provider, **kwargs):
+        self._parcel = self._process_location(location)
         self._ensemble = kwargs.get("ENSEMBLE", self._DEFAULT_ENSEMBLE)
         self._rcp = kwargs.get("RCP", self._DEFAULT_RCP)
         self._weather_provider = weather_provider
@@ -84,7 +86,7 @@ class WofostSimulator:
     @property
     def parcel_id(self):
         """Assign parcel ID"""
-        return self._find_parcel_id(self._parcel)
+        return self._find_location_id(self._parcel)
 
     @property
     def osgrid_code(self):
@@ -127,16 +129,35 @@ class WofostSimulator:
         return defaults.get("cropd")
 
     @staticmethod
-    def _find_parcel_id(parcel):
+    def _process_location(location):
+        """
+        Take input location and return either a parcel object
+        or an OSgrid code
+        """
+        if isinstance(location, (Parcel, str)):
+            return location
+        if isinstance(location, tuple):
+            return lonlat2osgrid(coords=location, figs=8)
+        raise ValueError(
+            f"{location} must be either an OS tile code (str), "
+            f"a tuple containing a lon-lat pair, or "
+            f"a Parcel instance."
+        )
+
+    @staticmethod
+    def _find_location_id(location):
         """Retrieve parcel ID from parcel object"""
-        if isinstance(parcel, str):
-            parcel_id = parcel
-        elif isinstance(parcel, Parcel):
-            parcel_id = parcel.parcel_id
+        if isinstance(location, str):
+            parcel_id = location
+        elif isinstance(location, location):
+            parcel_id = location.parcel_id
+        elif isinstance(location, tuple):
+            parcel_id = lonlat2osgrid(coords=location, figs=8)
         else:
-            parcel_id = None
             raise ValueError(
-                f"{parcel} must be either an ID (str) or a Parcel instance."
+                f"{location} must be either an OS tile code (str), "
+                f"a tuple containing a lon-lat pair, or "
+                f"a Parcel instance."
             )
         return parcel_id
 
@@ -197,12 +218,7 @@ class WofostSimulator:
                 )
             wdp = ParcelWeatherDataProvider(parcel=self._parcel)
         elif self.weather_provider == "ERA5":
-            if isinstance(self._parcel, str):
-                raise TypeError(
-                    "Custom weather data can only be retrieved for parcels "
-                    "and not for geographic coordinates"
-                )
-            wdp = Era5WeatherDataProvider(parcel=self._parcel)
+            wdp = Era5WeatherDataProvider(location=self._parcel)
         else:
             wdp = None
             raise ValueError(
