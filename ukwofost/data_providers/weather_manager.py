@@ -23,6 +23,7 @@ from pcse.settings import settings
 from pcse.util import check_angstromAB, reference_ET
 
 from ukwofost.core import app_config
+from ukwofost.core.parcel import Parcel
 from ukwofost.core.utils import (
     calc_doy,
     find_closest_point,
@@ -32,8 +33,6 @@ from ukwofost.core.utils import (
     osgrid2lonlat,
     rh_to_vpress,
 )
-
-# from ukwofost.db_manager import get_parcel_data, get_dtm_values
 
 
 # Conversion functions
@@ -700,7 +699,8 @@ class Era5WeatherDataProvider(WeatherDataProvider):
     }
 
     variable_mapping = {
-        "": "DAY",
+        "Unnamed: 0": "DAY",
+        "date": "DAY",
         "tasmin": "TMIN",
         "tasmax": "TMAX",
         "pr": "RAIN",
@@ -708,20 +708,30 @@ class Era5WeatherDataProvider(WeatherDataProvider):
         "irrad": "IRRAD",
     }
 
+    keys_to_remove = [
+        "tasmean",
+        "trange",
+        "swdown",
+        "lwdown",
+        "hurs",
+        "ssrd",
+    ]
+
     # pylint: disable=R0913,C0103
     def __init__(
         self,
-        parcel,
-        delimiter=",",
+        location,
         dateformat="%Y-%m-%d",
         ETmodel="PM",
         force_reload=False,
     ):
         WeatherDataProvider.__init__(self)
-        self.longitude = parcel.lon
-        self.latitude = parcel.lat
-        self.parcel_id = parcel.parcel_id
-        self.elevation = parcel.elevation
+        self.longitude, self.latitude = self._find_coordinates(location)
+        self.elevation = self._assign_elevation(location)
+        self.location_id = self._assign_location(location)
+        self.fp_csv_fname = self._build_filename(
+            lon=self.longitude, lat=self.latitude
+        )
         self.dateformat = dateformat
         self.ETmodel = ETmodel
         self.nodata_value = -99
@@ -734,22 +744,109 @@ class Era5WeatherDataProvider(WeatherDataProvider):
             raise PCSEError(msg)
 
         if force_reload or not self._load_cache_file(self.fp_csv_fname):
-
-            with open(self.fp_csv_fname, "r", encoding="utf-8") as csv_file:
-                # csv_file.readline()  # Skip first line
-                self._read_observations(csv_file, delimiter)
+            # with open(self.fp_csv_fname, "r", encoding="utf-8") as csv_file:
+            #     # csv_file.readline()  # Skip first line
+            #     self._read_observations(csv_file, delimiter)
+            csv_file = pd.read_csv(self.fp_csv_fname)
+            self._read_observations(csv_file)
             self._write_cache_file(self.fp_csv_fname)
 
-    @property
-    def fp_csv_fname(self):
-        """Set path including name of weather file"""
-        os_code = self._create_oscode(self.longitude, self.latitude)
-        return self._build_filename(os_code)
+    # @property
+    # def longitude(self):
+    #     """Set longitude of the weather query location"""
+    #     lon, _ = self._find_coordinates(self._location)
+    #     return lon
+
+    # @property
+    # def latitude(self):
+    #     """Set latitude of the weather query location"""
+    #     _, lat = self._find_coordinates(self._location)
+    #     return lat
+
+    # @property
+    # def location_id(self):
+    #     """
+    #     Assign ID of the location. This could either be the OS grid
+    #     code of the tile containing the location, or the ID of the
+    #     parcel of interest if an instance of the Parcel class has been
+    #     passed.
+    #     """
+    #     return self._assign_location(self._location)
+
+    # @property
+    # def elevation(self):
+    #     """Find elevation of the location"""
+    #     return self._assign_elevation(self._location)
+
+    # @property
+    # def fp_csv_fname(self):
+    #     """Set path including name of weather file"""
+    #     os_code = self._create_oscode(self.longitude, self.latitude)
+    #     return self._build_filename(os_code)
 
     @staticmethod
-    def _build_filename(os_code):
+    def _find_coordinates(location):
+        """Retrieve lon and lat from location"""
+        if isinstance(location, str):
+            lon, lat = osgrid2lonlat(gridref=location, epsg=4326)
+        elif isinstance(location, Parcel):
+            lon, lat = location.lon, location.lat
+        else:
+            lon, lat = None, None
+            raise ValueError(
+                "Location can only be of type 'str' or "
+                "an instance of the class 'Parcel"
+            )
+        return lon, lat
+
+    @staticmethod
+    def _assign_location(location):
+        """
+        Assign ID of the location. This could either be the OS grid
+        code of the tile containing the location, or the ID of the
+        parcel of interest if an instance of the Parcel class has been
+        passed.
+        """
+        if isinstance(location, Parcel):
+            location_id = location.parcel_id
+        elif isinstance(location, str):
+            location_id = location
+        else:
+            location_id = None
+            raise ValueError(
+                "Location can only be of type 'str' or "
+                "an instance of the class 'Parcel"
+            )
+        return location_id
+
+    @staticmethod
+    def _assign_elevation(location):
+        """ "
+        Find elevation of 'location'
+        """
+        if isinstance(location, Parcel):
+            elevation = location.elevation
+        elif isinstance(location, str):
+            try:
+                elevation = round(
+                    get_dtm_values(location, app_config)["elevation"]
+                )
+            except ConnectionError:
+                elevation = 0
+            return elevation
+        else:
+            elevation = None
+            raise ValueError(
+                "Location can only be of type 'str' or "
+                "an instance of the class 'Parcel"
+            )
+        return elevation
+
+    @staticmethod
+    def _build_filename(lon, lat):
         """Build filename for weather data"""
         # pylint: disable=E1101
+        os_code = Era5WeatherDataProvider._create_oscode(lon=lon, lat=lat)
         filepath = app_config.data_dirs["era_reanalysis_climate_dir"]
         os_tile = os_code[:2] + os_code[2:4] + os_code[6:8]
         filename = f"{filepath}{os_tile}.csv"
@@ -764,9 +861,14 @@ class Era5WeatherDataProvider(WeatherDataProvider):
     def _create_header(self):
         country = "Great Britain"
         location = lonlat2osgrid((self.longitude, self.latitude), figs=8)
+        if location == self.location_id:
+            desc = (
+                f"Historic weather data from ERA5 reanalysis "
+                f"at location '{location}'"
+            )
         desc = (
-            f"Historic weather data from ERA5 reanalysis for parcel"
-            f"'{self.parcel_id}' at location '{location}'"
+            f"Historic weather data from ERA5 reanalysis for parcel "
+            f"'{self.location_id}' at location '{location}'"
         )
         src = "Copernicus"
         contact = (
@@ -783,84 +885,55 @@ class Era5WeatherDataProvider(WeatherDataProvider):
         ]
 
     # pylint: disable=W4902, R0914
-    def _read_observations(self, csv_file, delimiter):
+    def _read_observations(self, csv_file):
         """
         Processes the rows with meteo data and converts into the correct units.
         """
-        obs = csv.DictReader(csv_file, delimiter=delimiter, quotechar='"')
+        csv_file.rename(columns=self.variable_mapping, inplace=True)
+        csv_file["SNOWDEPTH"] = np.nan
 
-        keys_to_remove = [
-            "tasmean",
-            "trange",
-            "swdown",
-            "lwdown",
-            "hurs",
-            "ssrd",
-        ]
+        for column, conversion_func in self.obs_conversions.items():
+            if column in csv_file.columns:
+                csv_file[column] = csv_file[column].apply(conversion_func)
 
-        renamed_obs = []
-        for d in obs:
-            renamed_d = {}
-            for old_name, new_name in self.variable_mapping.items():
-                renamed_d[new_name] = d.pop(old_name)
+        csv_file["VAP"] = csv_file.apply(
+            lambda row: rh_to_vpress(row["hurs"], row["tasmean"]), axis=1
+        )
+        csv_file["DAY"] = csv_file.apply(
+            lambda row: csvdate_to_date(row["DAY"], self.dateformat), axis=1
+        )
 
-            renamed_d["SNOWDEPTH"] = np.nan
-            renamed_d["VAP"] = rh_to_vpress(
-                float(d["hurs"]), float(d["tasmean"])
+        for key in self.keys_to_remove:
+            if key in csv_file.columns:
+                csv_file.drop(columns=key, inplace=True)
+
+        for _, d in csv_file.iterrows():
+            if math.isnan(d["SNOWDEPTH"]):
+                d.drop("SNOWDEPTH", inplace=True)
+            row = d.to_dict()
+            day = row["DAY"]
+
+            # Reference ET in mm/day
+            e0, es0, et0 = reference_ET(
+                LAT=self.latitude,
+                ELEV=self.elevation,
+                ANGSTA=self.angstA,
+                ANGSTB=self.angstB,
+                ETMODEL=self.ETmodel,
+                **row,
             )
+            # convert to cm/day
+            row["E0"] = e0 / 10.0
+            row["ES0"] = es0 / 10.0
+            row["ET0"] = et0 / 10.0
 
-            # Merge with the remaining data
-            renamed_d.update(d)
-            renamed_obs.append(renamed_d)
-
-        for item in renamed_obs:
-            for key in keys_to_remove:
-                item.pop(key, None)
-
-        for i, d in enumerate(renamed_obs):
-            try:
-                day = None
-                day = csvdate_to_date(d["DAY"], self.dateformat)
-                row = {"DAY": day}
-                for label, func in self.obs_conversions.items():
-                    value = float(d[label])
-                    r = func(value)
-                    if math.isnan(r):
-                        if label == "SNOWDEPTH":
-                            continue
-                        raise ParseError
-                    row[label] = r
-
-                # Reference ET in mm/day
-                e0, es0, et0 = reference_ET(
-                    LAT=self.latitude,
-                    ELEV=self.elevation,
-                    ANGSTA=self.angstA,
-                    ANGSTB=self.angstB,
-                    ETMODEL=self.ETmodel,
-                    **row,
-                )
-                # convert to cm/day
-                row["E0"] = e0 / 10.0
-                row["ES0"] = es0 / 10.0
-                row["ET0"] = et0 / 10.0
-
-                wdc = WeatherDataContainer(
-                    LAT=self.latitude,
-                    LON=self.longitude,
-                    ELEV=self.elevation,
-                    **row,
-                )
-                self._store_WeatherDataContainer(wdc, day)
-            except (ParseError, KeyError):
-                msg = (
-                    f"Failed reading element '{label}' "
-                    f"for day '{day}' at line {i}. Skipping ..."
-                )
-                self.logger.warn(msg)
-            except ValueError:  # strange value in cell
-                msg = f"Failed computing a value for day '{day}' at row {i}"
-                self.logger.warn(msg)
+            wdc = WeatherDataContainer(
+                LAT=self.latitude,
+                LON=self.longitude,
+                ELEV=self.elevation,
+                **row,
+            )
+            self._store_WeatherDataContainer(wdc, day)
 
     # pylint: enable=W4902, R0914
 
