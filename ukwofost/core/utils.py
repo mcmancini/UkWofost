@@ -840,8 +840,7 @@ def find_contiguous_sets(data_frame, col_name):
         + 1
     )
     tuple_list = list(zip(first, last))
-    max_index = max(end for _, end in tuple_list)
-    result = [0] * max_index
+    result = [0] * len(data_frame)
     for index, (start, end) in enumerate(tuple_list, start=1):
         for i in range(start, end):
             result[i] = index
