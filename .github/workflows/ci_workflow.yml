@@ -23,6 +23,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: ${{ matrix.python-version }}
+          miniconda-version: "latest"
           activate-environment: anaconda-client-env
           environment-file: wofost-env.yml
           auto-activate-base: false
