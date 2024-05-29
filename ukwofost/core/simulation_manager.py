@@ -243,20 +243,24 @@ class WofostSimulator:
             )
         return soildata
 
-    def run(self, crop_or_rotation, **kwargs):
+    def run(self, crop_or_rotation, output_flag, **kwargs):
         """
         Method to run Wofost for the crop specified in 'crop' and
         with default crop parameters unless custom parameters are
         specified in **kwargs
         :param crop_or_rotation: an instance of the class 'Crop'
-               (see crop_manager.py for more info)
+            (see crop_manager.py for more info)
+        :param output_flag (str): can be declared as "summary" or
+            "full" and flags whether the ouptut of the wofost run is
+            a time series of all ouput variables returned by Wofost, or
+            the summary yield value at harvest
         :param **kwargs: optional dictionary with key-value pairs
-               for any of the parameters that need to be customised:
-               these only include the underlying WOFOST parameters
-               (see wofost_params class attribute), but not agromanagement
-               parameters. Non-default agromanagement parameters must be
-               modified when initialising the instance of the class 'Crop'
-               which is then passed to this method
+            for any of the parameters that need to be customised:
+            these only include the underlying WOFOST parameters
+            (see wofost_params class attribute), but not agromanagement
+            parameters. Non-default agromanagement parameters must be
+            modified when initialising the instance of the class 'Crop'
+            which is then passed to this method
         """
         if isinstance(crop_or_rotation, Crop):
             self.cropd.set_active_crop(
@@ -286,8 +290,20 @@ class WofostSimulator:
             wofsim = Wofost80_NWLP_FD_beta(parameters, self.wdp, crop_rotation)
             wofsim.run_till_terminate()
             # Collect output
-            summary_output = wofsim.get_summary_output()
-            return summary_output[0]["TWSO"]
+            if output_flag == "summary":
+                summary_output = wofsim.get_summary_output()
+                return summary_output[0]["TWSO"]
+            if output_flag == "full":
+                output = wofsim.get_output()
+                df = pd.DataFrame(output)
+                df.set_index("day", inplace=True, drop=True)
+                return df
+            raise ValueError(
+                'The "output_flag" input argument can only '
+                'take values of "full" for a time series of all'
+                ' output variables or "summary" for the yield at'
+                " harvest!"
+            )
             # pylint: enable=R0914
 
         if isinstance(crop_or_rotation, CropRotation):
@@ -317,11 +333,20 @@ class WofostSimulator:
                     f" due to {e}"
                 )
             # pylint: enable=W0718
-            output = wofsim.get_output()
-
-            df = pd.DataFrame(output)
-            df.set_index("day", inplace=True, drop=True)
-            return df
+            if output_flag == "summary":
+                summary_output = wofsim.get_summary_output()
+                return summary_output[0]["TWSO"]
+            if output_flag == "full":
+                output = wofsim.get_output()
+                df = pd.DataFrame(output)
+                df.set_index("day", inplace=True, drop=True)
+                return df
+            raise ValueError(
+                'The "output_flag" input argument can only '
+                'take values of "full" for a time series of all'
+                ' output variables or "summary" for the yield at'
+                " harvest!"
+            )
         raise ValueError(f"Unsupported type: {type(crop_or_rotation)}")
 
     def _override_defaults(self, default_parameters, item):

@@ -26,32 +26,34 @@ of the Crop class is instantiated (line 45). More information on
 agromanagment can be found at https://tinyurl.com/bdcmj5b7
 """
 
-from ukwofost.core.crop_manager import Crop, CropRotation
+from ukwofost.core.crop_manager import Crop
 from ukwofost.core.defaults import defaults
 from ukwofost.core.simulation_manager import WofostSimulator
 from ukwofost.core.utils import lonlat2osgrid
 
 # Define input parameters
-LON, LAT = -3.4111140552800747, 57.13317708272391
-CROPS = ["wheat", "fallow", "potato"]
-YEARS = [2020, 2021, 2022]
-
+LON, LAT = -1.670330465465696, 55.028574354445425
+CROP = "wheat"
+YEAR = 2019
 # Build Wofost simulator
 os_code = lonlat2osgrid((LON, LAT), 10)
 sim = WofostSimulator(
-    parcel=os_code, weather_provider="Chess", soil_provider="SoilGrids"
+    location=os_code, weather_provider="ERA5", soil_provider="SoilGrids"
 )
 
-# Define management
-rotation = []
-for item in zip(CROPS, YEARS):
-    crop = item[0]
-    year = item[1]
-    crop_params = defaults.get("management").get(crop)
-    rotation.append(Crop(calendar_year=year, crop=crop, **crop_params))
+crop_management = defaults.get("management").get(CROP)
+crop = Crop(calendar_year=YEAR, crop=CROP, **crop_management)
+crop_output = sim.run(crop_or_rotation=crop, output_flag="full")
+# # Define management
+# rotation = []
+# for item in zip(CROPS, YEARS):
+#     crop = item[0]
+#     year = item[1]
+#     crop_params = defaults.get("management").get(crop)
+#     rotation.append(Crop(calendar_year=year, crop=crop, **crop_params))
 
-crop_rotation = CropRotation(rotation)
+# crop_rotation = CropRotation(rotation)
 
 # Run WOFOST to compute crop yield
-crop_yield = sim.run(crop_rotation)
-print(crop_yield)
+# crop_yield = sim.run(crop_rotation)
+# print(crop_yield)
