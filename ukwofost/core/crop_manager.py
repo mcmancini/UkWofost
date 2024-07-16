@@ -91,7 +91,8 @@ class Crop:
         self.crop = crop
         self.crop_type = self._categorize_crop()
         self.calendar_year = calendar_year
-        self.agromanagement = self._generate_agromanagement(**kwargs)
+        self._agromanagement = self._generate_agromanagement(**kwargs)
+        self.agromanagement = yaml.safe_load(self._agromanagement)
 
     # pylint: disable=R0914, R0912
     def _generate_agromanagement(self, **kwargs):
@@ -273,7 +274,7 @@ class Crop:
             msg += "Variety: " + self.variety + "\n"
         msg += "Crop type: " + self.crop_type + "\n"
         msg += "-------------------Agro-management--------------------\n"
-        msg += self.agromanagement
+        msg += self._agromanagement
 
         return msg
 
@@ -291,15 +292,15 @@ class CropRotation:
     """
 
     def __init__(self, crops):
-        self.rotation = yaml.safe_load(self._generate_rotation(crops))
-        self.crop_list = self._list_crops()
         self.yaml_rotation = self._generate_rotation(crops)
+        self.rotation = yaml.safe_load(self.yaml_rotation)
+        self.crop_list = self._list_crops()
 
     def _generate_rotation(self, crops):
-        rotation_yaml = ""
+        rotation_yaml = []
         for crop in crops:
-            rotation_yaml += crop.agromanagement + "\n"
-        return rotation_yaml
+            rotation_yaml += crop.agromanagement
+        return yaml.dump(rotation_yaml)
 
     def _list_crops(self):
         crops = self.find_value("crop_name")
