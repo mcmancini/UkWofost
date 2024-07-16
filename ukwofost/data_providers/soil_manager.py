@@ -40,10 +40,10 @@ class SoilDataProvider(dict):
     # class attributes
     _DATA_SOURCE = None
     _DEFAULT_SOILVARS = ["sand", "silt", "clay"]
-    _WILTING_POTENTIAL = log10(1.5e4)
-    _FIELD_CAPACITY = log10(150)
 
     _defaults = {
+        "WILTING_POTENTIAL": log10(1.5e4),
+        "FIELD_CAPACITY": log10(150),
         "CRAIRC": 0.060,
         "SOPE": 1.47,
         "KSUB": 1.47,
@@ -81,8 +81,8 @@ class SoilDataProvider(dict):
         smtab = [x for pair in zip(psi, water_ret) for x in pair]
         # Permanent wilting point conventianally at 1500 kPa, fc
         # between 10-30kPa
-        wp_idx = psi.index(nearest(self._WILTING_POTENTIAL, psi))
-        fc_idx = psi.index(nearest(self._FIELD_CAPACITY, psi))
+        wp_idx = psi.index(nearest(self._defaults["WILTING_POTENTIAL"], psi))
+        fc_idx = psi.index(nearest(self._defaults["FIELD_CAPACITY"], psi))
         smw = water_ret[wp_idx]
         smfcf = water_ret[fc_idx]
         sm0 = water_ret[0]
@@ -151,15 +151,18 @@ class SoilGridsDataProvider(SoilDataProvider):
 
     def __init__(self, osgrid_code):
         super().__init__()
-        soil_texture_list = self._load_soil_data(osgrid_code)
-        self.update(self._return_soildata(osgrid_code, soil_texture_list))
+        self._osgrid_code = osgrid_code
+        self._soil_texture_list = self._load_soil_data()
+        self.update(
+            self._return_soildata(self._osgrid_code, self._soil_texture_list)
+        )
 
-    def _load_soil_data(self, osgrid_code):
+    def _load_soil_data(self):
         """
         Retrieve soil data from xarray file based on location defined in
         osgrid_code
         """
-        lon, lat = osgrid2lonlat(osgrid_code, epsg=4326)
+        lon, lat = osgrid2lonlat(self._osgrid_code, epsg=4326)
         soil_array = xr.open_dataset(SoilGridsDataProvider._SOIL_PATH)
 
         soil_df = (
@@ -192,6 +195,19 @@ class SoilGridsDataProvider(SoilDataProvider):
         # in this order. Last 3 optional
         soil_df = soil_df.iloc[0].tolist()
         return soil_df
+
+    def update_soil_data(self, **kwargs):
+        """
+        Update the soil data dictionary with the new values provided
+        """
+        for key, value in kwargs.items():
+            if key in self._defaults:
+                self._defaults[key] = value
+            else:
+                raise KeyError(f"{key} not in defaults")
+        self.update(
+            self._return_soildata(self._osgrid_code, self._soil_texture_list)
+        )
 
 
 # class WHSDDataProvider(SoilDataProvider):
