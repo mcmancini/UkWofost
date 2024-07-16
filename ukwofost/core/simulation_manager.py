@@ -18,7 +18,7 @@ from pcse.db.nasapower import NASAPowerWeatherDataProvider
 from pcse.models import LINGRA_WLP_FD, Wofost80_NWLP_FD_beta
 
 from ukwofost.core.crop_manager import Crop, CropRotation
-from ukwofost.core.defaults import defaults, wofost_parameters
+from ukwofost.core.defaults import defaults, soil_parameters, wofost_parameters
 from ukwofost.core.parcel import Parcel
 from ukwofost.core.utils import lonlat2osgrid, osgrid2lonlat
 from ukwofost.data_providers.soil_manager import SoilGridsDataProvider
@@ -29,7 +29,7 @@ from ukwofost.data_providers.weather_manager import (
 )
 
 
-# pylint: disable=R0902
+# pylint: disable=R0902,R0914
 class WofostSimulator:
     """
     Class generating a Wofost simulator that allows to
@@ -262,6 +262,18 @@ class WofostSimulator:
             modified when initialising the instance of the class 'Crop'
             which is then passed to this method
         """
+        # Override soil parameters if needed
+        soil_kwargs = {}
+        non_soil_kwargs = {}
+        for key, value in kwargs.items():
+            if key in soil_parameters:
+                soil_kwargs[key] = value
+            else:
+                non_soil_kwargs[key] = value
+
+        if soil_kwargs:
+            self.soildata.update_soil_data(**soil_kwargs)
+
         if isinstance(crop_or_rotation, Crop):
             self.cropd.set_active_crop(
                 crop_or_rotation.crop, crop_or_rotation.variety
@@ -274,7 +286,8 @@ class WofostSimulator:
                 sitedata=self.sitedata,
             )
 
-            self._override_defaults(parameters, kwargs)
+            # override all non-soil parameters if needed
+            self._override_defaults(parameters, non_soil_kwargs)
 
             # generate agromanagement
             crop_rotation = CropRotation([crop_or_rotation]).rotation
@@ -304,7 +317,6 @@ class WofostSimulator:
                 ' output variables or "summary" for the yield at'
                 " harvest!"
             )
-            # pylint: enable=R0914
 
         if isinstance(crop_or_rotation, CropRotation):
             agromanagement = crop_or_rotation.rotation
@@ -379,4 +391,4 @@ class WofostSimulator:
         return msg
 
 
-# pylint: enable=R0902
+# pylint: enable=R0902,R0914
