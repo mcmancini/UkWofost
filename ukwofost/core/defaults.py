@@ -191,6 +191,22 @@ wofost_parameters = set(
     ]
 )
 
+soil_parameters = set(
+    [
+        "WILTING_POTENTIAL",
+        "FIELD_CAPACITY",
+        "CRAIRC",
+        "SOPE",
+        "KSUB",
+        "RDMSOL",
+        "SPADS",
+        "SPODS",
+        "SPASS",
+        "SPOSS",
+        "DEFLIM",
+    ]
+)
+
 moisture_adjustment = {
     "wheat": 0.145,
     "barley": 0.145,
