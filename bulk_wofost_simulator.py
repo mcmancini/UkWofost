@@ -25,11 +25,14 @@ instances of the CropRotation class
 
 import argparse
 import math
+
 import pandas as pd
+
 from ukwofost.core.crop_manager import Crop, CropBuilder, CropRotation
-from ukwofost.core.defaults import wofost_parameters, moisture_adjustment
+from ukwofost.core.defaults import (moisture_adjustment, soil_parameters,
+                                    wofost_parameters)
 from ukwofost.core.simulation_manager import WofostSimulator
-from ukwofost.core.utils import lonlat2osgrid, find_contiguous_sets
+from ukwofost.core.utils import find_contiguous_sets, lonlat2osgrid
 
 
 def apply_conversion(df_row):
@@ -65,7 +68,7 @@ def run_rotations(input_sample_df, output_filename):
         # initialise simulator
         os_code = lonlat2osgrid((lon, lat), 10)
         sim = WofostSimulator(
-            parcel=os_code,
+            location=os_code,
             weather_provider="Chess",
             soil_provider="SoilGrids",
         )
@@ -90,7 +93,7 @@ def run_rotations(input_sample_df, output_filename):
                     nonstandard_parameters = {
                         key: value
                         for key, value in parameter_dict.items()
-                        if key in wofost_parameters
+                        if key in wofost_parameters or key in soil_parameters
                     }
 
                     # Build rotation
@@ -102,13 +105,15 @@ def run_rotations(input_sample_df, output_filename):
                         crop = Crop(
                             crop_args.calendar_year,
                             crop_args.crop,
-                            **crop_params
+                            **crop_params,
                         )
                         crops_in_rotation.append(crop)
 
                     crop_rotation = CropRotation(crops_in_rotation)
                     rotation_output = sim.run(
-                        crop_rotation, **nonstandard_parameters
+                        crop_or_rotation=crop_rotation,
+                        output_flag="full",
+                        **nonstandard_parameters,
                     ).reset_index(drop=False)
 
                     rotation_output["lon"], rotation_output["lat"] = lon, lat
@@ -149,23 +154,20 @@ def run_rotations(input_sample_df, output_filename):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Run the Wofost Crop yield simulator"
-        )
+    )
     parser.add_argument(
         "-i",
         "--input",
         type=str,
         required=True,
-        help="Path to the input CSV file"
+        help="Path to the input CSV file",
     )
     parser.add_argument(
         "-o",
         "--output",
         type=str,
         required=True,
-        help=(
-            "Path of the folder where the output CSV files"
-            "will be saved"
-        ),
+        help=("Path of the folder where the output CSV files" "will be saved"),
     )
 
     args = parser.parse_args()
