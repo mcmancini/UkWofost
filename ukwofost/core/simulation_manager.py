@@ -257,10 +257,10 @@ class WofostSimulator:
         :param **kwargs: optional dictionary with key-value pairs
             for any of the parameters that need to be customised:
             these only include the underlying WOFOST parameters
-            (see wofost_params class attribute), but not agromanagement
-            parameters. Non-default agromanagement parameters must be
-            modified when initialising the instance of the class 'Crop'
-            which is then passed to this method
+            (see wofost_params class attribute) and soil parameters,
+            but not agromanagement parameters. Non-default agromanagement
+            parameters must be modified when initialising the instance of
+            the class 'Crop' which is then passed to this method
         """
         # Override soil parameters if needed
         soil_kwargs = {}
