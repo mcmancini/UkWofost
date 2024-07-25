@@ -67,7 +67,7 @@ class WofostSimulator:
     __str__(self, /)
         Return str(self).
 
-    run(self, crop, **kwargs)
+    run(self, crop_or_rotation, output_flag, **kwargs)
         run the Wofost simulator
     """
 
@@ -223,7 +223,7 @@ class WofostSimulator:
             wdp = None
             raise ValueError(
                 "weather provider can only be 'NASA', "
-                "'Chess', 'Downscaled' or 'ERA5"
+                "'Chess', 'Downscaled' or 'ERA5'"
             )
         return wdp
 
@@ -262,7 +262,14 @@ class WofostSimulator:
             parameters must be modified when initialising the instance of
             the class 'Crop' which is then passed to this method
         """
-        # Override soil parameters if needed
+        # Override soil parameters if needed. This bit of hte code is clunky
+        # because, while soil parameters can be overwritten through the
+        # set_override() method in the ParameterProvider class, changing
+        # most soil parameters requires re-running the Van-Genuchten
+        # equations to update the soil hydraulic properties which can't be
+        # easily done through the ParameterProvider class as it is part of
+        # the pcse package.
+
         soil_kwargs = {}
         non_soil_kwargs = {}
         for key, value in kwargs.items():

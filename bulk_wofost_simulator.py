@@ -29,8 +29,11 @@ import math
 import pandas as pd
 
 from ukwofost.core.crop_manager import Crop, CropBuilder, CropRotation
-from ukwofost.core.defaults import (moisture_adjustment, soil_parameters,
-                                    wofost_parameters)
+from ukwofost.core.defaults import (
+    moisture_adjustment,
+    soil_parameters,
+    wofost_parameters,
+)
 from ukwofost.core.simulation_manager import WofostSimulator
 from ukwofost.core.utils import find_contiguous_sets, lonlat2osgrid
 
@@ -69,7 +72,7 @@ def run_rotations(input_sample_df, output_filename):
         os_code = lonlat2osgrid((lon, lat), 10)
         sim = WofostSimulator(
             location=os_code,
-            weather_provider="Chess",
+            weather_provider="ERA5",
             soil_provider="SoilGrids",
         )
         lonlat_df = input_sample_df[
