@@ -22,7 +22,7 @@ dependencies:
   - xarray
   - yaml
   - pip:
-      - pcse==5.5.3
+      - pcse>=5.5,<6.0
       - rosetta-soil
       - soiltexture
 
