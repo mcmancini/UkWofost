@@ -89,7 +89,7 @@ check_angstrom(angst_a, angst_b):
     Routine checks validity of Angstrom coefficients.
     This has been taken straight from the pcse package
     developed by Wageningen University and contained in
-    pcse.db.NASAPowerWeatherDataProvider    
+    pcse.db.NASAPowerWeatherDataProvider
 
 estimate_angstrom(toa=None, toc=None):
     Determine Angstrom A/B parameters from Top-of-Atmosphere and
