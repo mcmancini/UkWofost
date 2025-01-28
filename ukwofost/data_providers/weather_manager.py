@@ -16,11 +16,10 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from pcse.base import WeatherDataContainer, WeatherDataProvider
-from pcse.db import NASAPowerWeatherDataProvider
 from pcse.exceptions import PCSEError
 from pcse.fileinput.csvweatherdataprovider import ParseError, csvdate_to_date
 from pcse.settings import settings
-from pcse.util import check_angstromAB, reference_ET
+from pcse.util import reference_ET
 
 from ukwofost.core import app_config
 from ukwofost.core.parcel import Parcel
