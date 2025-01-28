@@ -85,6 +85,16 @@ read_parcel_data(gid, folder):
     Read UKCEH parcel data retrieved from a series of
     files contained in "folder".
 
+check_angstrom(angst_a, angst_b):
+    Routine checks validity of Angstrom coefficients.
+    This has been taken straight from the pcse package
+    developed by Wageningen University and contained in
+    pcse.db.NASAPowerWeatherDataProvider
+
+estimate_angstrom(toa=None, toc=None):
+    Determine Angstrom A/B parameters from Top-of-Atmosphere and
+    top-of-Canopy radiation values if present.
+
 """
 
 import json
@@ -98,6 +108,7 @@ from math import exp, floor, log
 from math import radians as rad
 from math import sin, tan
 
+import numpy as np
 import pandas as pd
 import psycopg2
 from pyproj import Transformer
@@ -877,3 +888,97 @@ def read_parcel_data(gid, folder):
                         coords = feature["rp"]
                         metadata[parcel_id] = coords
     return metadata.get(gid, "Parcel not found")
+
+
+def check_angstrom(angst_a, angst_b):
+    """
+    Routine checks validity of Angstrom coefficients.
+    This has been taken straight from the pcse package
+    developed by Wageningen University and contained in
+    pcse.db.NASAPowerWeatherDataProvider
+
+    Parameters
+    ----------
+    :param angst_a (float): Angstrom A coefficient
+    :param angst_b (float): Angstrom B coefficient
+
+    Return
+    ------
+    :return: tuple of Angstrom A and B coefficients
+
+    """
+    min_a = 0.1
+    max_a = 0.4
+    min_b = 0.3
+    max_b = 0.7
+    min_sum_ab = 0.6
+    max_sum_ab = 0.9
+    angstrom_a = abs(angst_a)
+    angstrom_b = abs(angst_b)
+    sum_ab = angstrom_a + angstrom_b
+    if angstrom_a < min_a or angstrom_a > max_a:
+        msg = "invalid Angstrom A value!"
+        raise ValueError(f"{msg} : this must be between {min_a} and {max_a}.")
+    if angstrom_b < min_b or angstrom_b > max_b:
+        msg = "invalid Angstrom B value!"
+        raise ValueError(f"{msg} : this must be between {min_b} and {max_b}.")
+    if sum_ab < min_sum_ab or sum_ab > max_sum_ab:
+        msg = "invalid sum of Angstrom A & B values!"
+        raise ValueError(
+            f"{msg} : this must be between {min_sum_ab} and {max_sum_ab}."
+        )
+    return angstrom_a, angstrom_b
+
+
+def estimate_angstrom(toa=None, toc=None):
+    """
+    Determine Angstrom A/B parameters from Top-of-Atmosphere and
+    top-of-Canopy radiation values if present.
+    The Angstrom A/B parameters are determined by dividing swv_dwn by toa_dwn
+    and taking the 0.05 percentile for Angstrom A and the 0.98 percentile for
+    Angstrom A+B: toa_dwn*(A+B) approaches the upper envelope while
+    toa_dwn*A approaches the lower envelope of the records of swv_dwn
+    values.
+
+    Parameters
+    ----------
+    :param toa: Top of the Atmosphere radiation
+    :param toc: Top of the Canopy radiation
+
+    Return
+    ------
+    :return: tuple of Angstrom A/B values
+    """
+    angst_a = 0.29
+    angst_b = 0.49
+
+    if toa is None or toc is None:
+        angstrom_a, angstrom_b = angst_a, angst_b
+        return angstrom_a, angstrom_b
+
+    # check if sufficient data is available to make a reasonable estimate:
+    # As a rule of thumb we want to have at least 200 days available
+    if len(toa) < 200 or len(toc) < 200:
+        msg = (
+            "Less then 200 days of data available. Reverting to "
+            + "default Angstrom A/B coefficients (%f, %f)"
+        )
+        angstrom_a, angstrom_b = angst_a, angst_b
+        return angstrom_a, angstrom_b
+
+    # calculate relative radiation (swv_dwn/toa_dwn) and percentiles
+    relative_radiation = toc / toa
+    ix = relative_radiation.notnull()
+    angstrom_a = float(np.percentile(relative_radiation[ix].values, 5))
+    angstrom_ab = float(np.percentile(relative_radiation[ix].values, 98))
+    angstrom_b = angstrom_ab - angstrom_a
+
+    try:
+        angstrom_a, angstrom_b = check_angstrom(angstrom_a, angstrom_b)
+    except ValueError as e:
+        msg = (
+            "Angstrom A/B values (%f, %f) outside valid range: %s. "
+            + "Reverting to default values."
+        )
+        msg = msg % (angstrom_a, angstrom_b, e)
+    return angstrom_a, angstrom_b
