@@ -32,6 +32,7 @@ from ukwofost.core.utils import (
     nearest,
     osgrid2lonlat,
     rh_to_vpress,
+    estimate_angstrom,
 )
 
 
@@ -149,11 +150,8 @@ class NetCDFWeatherDataProvider(WeatherDataProvider):
         # pylint: enable=E1101
 
         # Retrieve Angstrom coefficients A and B
-        w = NASAPowerWeatherDataProvider(
-            latitude=self.latitude, longitude=self.longitude
-        )
         # pylint: disable=C0103
-        self.angstA, self.angstB = check_angstromAB(w.angstA, w.angstB)
+        self.angstA, self.angstB = estimate_angstrom()
         # pylint: enable=C0103
 
         # Check for existence of a cache file
@@ -621,11 +619,8 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
 
     def _create_angstrom(self):
         """Find and assign Angstrom coefficients A and B"""
-        w = NASAPowerWeatherDataProvider(
-            latitude=self.latitude, longitude=self.longitude
-        )
         # pylint: disable=C0103
-        self.angstA, self.angstB = check_angstromAB(w.angstA, w.angstB)
+        self.angstA, self.angstB = estimate_angstrom()
 
     def _load_cache_file(self, csv_fname):
         cache_filename = self._find_cache_file(csv_fname)
@@ -939,11 +934,8 @@ class Era5WeatherDataProvider(WeatherDataProvider):
 
     def _create_angstrom(self):
         """Find and assign Angstrom coefficients A and B"""
-        w = NASAPowerWeatherDataProvider(
-            latitude=self.latitude, longitude=self.longitude
-        )
         # pylint: disable=C0103
-        self.angstA, self.angstB = check_angstromAB(w.angstA, w.angstB)
+        self.angstA, self.angstB = estimate_angstrom()
 
     def _load_cache_file(self, csv_fname):
         cache_filename = self._find_cache_file(csv_fname)
