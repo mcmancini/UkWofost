@@ -918,14 +918,10 @@ def check_angstrom(angst_a, angst_b):
     sum_ab = angstrom_a + angstrom_b
     if angstrom_a < min_a or angstrom_a > max_a:
         msg = "invalid Angstrom A value!"
-        raise ValueError(
-            f"{msg} : this must be between {min_a} and {max_a}."
-        )
+        raise ValueError(f"{msg} : this must be between {min_a} and {max_a}.")
     if angstrom_b < min_b or angstrom_b > max_b:
         msg = "invalid Angstrom B value!"
-        raise ValueError(
-            f"{msg} : this must be between {min_b} and {max_b}."
-        )
+        raise ValueError(f"{msg} : this must be between {min_b} and {max_b}.")
     if sum_ab < min_sum_ab or sum_ab > max_sum_ab:
         msg = "invalid sum of Angstrom A & B values!"
         raise ValueError(
@@ -962,14 +958,16 @@ def estimate_angstrom(toa=None, toc=None):
 
     # check if sufficient data is available to make a reasonable estimate:
     # As a rule of thumb we want to have at least 200 days available
-    if len(toa) < 200 or len (toc) < 200:
-        msg = ("Less then 200 days of data available. Reverting to " +
-                "default Angstrom A/B coefficients (%f, %f)")
+    if len(toa) < 200 or len(toc) < 200:
+        msg = (
+            "Less then 200 days of data available. Reverting to "
+            + "default Angstrom A/B coefficients (%f, %f)"
+        )
         angstrom_a, angstrom_b = angst_a, angst_b
         return angstrom_a, angstrom_b
 
     # calculate relative radiation (swv_dwn/toa_dwn) and percentiles
-    relative_radiation = toc/toa
+    relative_radiation = toc / toa
     ix = relative_radiation.notnull()
     angstrom_a = float(np.percentile(relative_radiation[ix].values, 5))
     angstrom_ab = float(np.percentile(relative_radiation[ix].values, 98))
@@ -978,7 +976,9 @@ def estimate_angstrom(toa=None, toc=None):
     try:
         angstrom_a, angstrom_b = check_angstrom(angstrom_a, angstrom_b)
     except ValueError as e:
-        msg = ("Angstrom A/B values (%f, %f) outside valid range: %s. " +
-                "Reverting to default values.")
+        msg = (
+            "Angstrom A/B values (%f, %f) outside valid range: %s. "
+            + "Reverting to default values."
+        )
         msg = msg % (angstrom_a, angstrom_b, e)
     return angstrom_a, angstrom_b
