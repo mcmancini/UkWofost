@@ -208,11 +208,18 @@ soil_parameters = set(
 )
 
 moisture_adjustment = {
-    "wheat": 0.145,
-    "barley": 0.145,
-    "rapeseed": 0.12,
-    "potato": 0.79,
-    "rye_grass": 0.75,
-    "maize": 0.155,
+    "fababeans": 0.145,
     "fallow": None,
+    "maize": 0.155,
+    "peas": 0.145,
+    "potato": 0.79,
+    "rapeseed": 0.12,
+    "rye_grass": 0.75,
+    "spring_barley": 0.145,
+    "spring_oats": 0.145,
+    "spring_wheat": 0.145,
+    "sugarbeet": 0.710,
+    "winter_barley": 0.145,
+    "winter_oats": 0.145,
+    "winter_wheat": 0.145,
 }
