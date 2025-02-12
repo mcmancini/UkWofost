@@ -218,6 +218,7 @@ moisture_adjustment = {
     "spring_barley": 0.145,
     "spring_oats": 0.145,
     "spring_wheat": 0.145,
+    "sugarbeet": 0.710,
     "winter_barley": 0.145,
     "winter_oats": 0.145,
     "winter_wheat": 0.145,
