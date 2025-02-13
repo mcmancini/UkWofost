@@ -43,8 +43,7 @@ class Parcel:
     """
 
     _PARCEL_DATA = os.path.join(
-        app_config.data_dirs["parcel_dir"],
-        "land_parcels.shp"
+        app_config.data_dirs["parcel_dir"], "land_parcels.shp"
     )
 
     def __init__(self, gid):
