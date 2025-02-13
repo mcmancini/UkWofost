@@ -455,7 +455,7 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
     }
 
     variable_mapping = {
-        "Date": "DAY",
+        "date": "DAY",
         "tmin": "TMIN",
         "tmax": "TMAX",
         "prec": "RAIN",
@@ -540,12 +540,10 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
         """
         obs = csv.DictReader(csv_file, delimiter=delimiter, quotechar='"')
         keys_to_remove = [
-            "swrad",
-            "lwrad",
-            "cloud",
+            "swdown",
+            "lwdown",
             "relhum",
             "pres",
-            "winddir",
         ]
 
         renamed_obs = []
@@ -558,7 +556,7 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
             renamed_d["VAP"] = rh_to_vpress(
                 float(d["relhum"]), float(renamed_d["TMIN"])
             )
-            renamed_d["IRRAD"] = float(d["swrad"])
+            renamed_d["IRRAD"] = float(d["swdown"])
 
             # Merge with the remaining data
             renamed_d.update(d)
