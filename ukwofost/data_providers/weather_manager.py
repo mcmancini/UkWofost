@@ -556,7 +556,7 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
             renamed_d["VAP"] = rh_to_vpress(
                 float(d["relhum"]), float(renamed_d["TMIN"])
             )
-            renamed_d["IRRAD"] = float(d["swrad"])
+            renamed_d["IRRAD"] = float(d["swdown"])
 
             # Merge with the remaining data
             renamed_d.update(d)
