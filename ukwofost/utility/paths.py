@@ -24,6 +24,6 @@ def find_project_root():
 
 
 ROOT_DIR = find_project_root()
-RESOURCES_DIR = os.path.join(ROOT_DIR, "resources")
-PARCEL_DATA_DIR = os.path.join(RESOURCES_DIR, "land_parcels")
-PARCEL_DATA = os.path.join(PARCEL_DATA_DIR, "land_parcels.shp")
+# RESOURCES_DIR = os.path.join(ROOT_DIR, "resources")
+# PARCEL_DATA_DIR = os.path.join(RESOURCES_DIR, "land_parcels")
+# PARCEL_DATA = os.path.join(PARCEL_DATA_DIR, "land_parcels.shp")
