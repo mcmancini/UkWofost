@@ -10,13 +10,13 @@ Generate parcels with attributes to be used to instantiate
 WofostSimulator objects.
 """
 
+import os
 import warnings
 
 import geopandas as gpd
 
 from ukwofost.core import app_config
 from ukwofost.core.utils import get_dtm_values, lonlat2osgrid
-from ukwofost.utility.paths import PARCEL_DATA
 
 
 class Parcel:
@@ -41,6 +41,11 @@ class Parcel:
     __str__(self, /)
         Return str(self).
     """
+
+    _PARCEL_DATA = os.path.join(
+        app_config.data_dirs["parcel_dir"],
+        "land_parcels.shp"
+    )
 
     def __init__(self, gid):
         self._parcel_id = gid
@@ -90,7 +95,7 @@ class Parcel:
         Compute OS grid code of the centroid
         of the parcel with id = "parcel_id"
         """
-        parcels_shapefile = gpd.read_file(PARCEL_DATA)
+        parcels_shapefile = gpd.read_file(self._PARCEL_DATA)
         parcel_centroid = parcels_shapefile[
             parcels_shapefile["gid"] == str(self.parcel_id)
         ].centroid
