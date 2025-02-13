@@ -455,7 +455,7 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
     }
 
     variable_mapping = {
-        "Date": "DAY",
+        "date": "DAY",
         "tmin": "TMIN",
         "tmax": "TMAX",
         "prec": "RAIN",
