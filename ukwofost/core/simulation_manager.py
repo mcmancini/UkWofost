@@ -46,7 +46,7 @@ class WofostSimulator:
         - an instance of the Parcel class (Parcel);
         - a lon-lat pair into a tuple (tuple)
     :param weather_provider (Str): either "Chess" (i.e., UKCEH
-        ChessScape UKCP18 1km), "Downscaled" (i.e., weather data
+        ChessScape UKCP18 1km), "Mesoclim" (i.e., weather data
         produced through data fusion and in csv format), "NASA"
         (i.e., the default WOFOST NASA historic weather data provider)
         or "ERA5" (i.e., historic Copernicus ERA5 reanalysis data in
@@ -210,7 +210,7 @@ class WofostSimulator:
             wdp = NetCDFWeatherDataProvider(
                 self.osgrid_code, self._rcp, self._ensemble
             )
-        elif self.weather_provider == "Downscaled":
+        elif self.weather_provider == "Mesoclim":
             if isinstance(self._parcel, str):
                 raise TypeError(
                     "Custom weather data can only be retrieved for parcels "
@@ -223,7 +223,7 @@ class WofostSimulator:
             wdp = None
             raise ValueError(
                 "weather provider can only be 'NASA', "
-                "'Chess', 'Downscaled' or 'ERA5'"
+                "'Chess', 'Mesoclim' or 'ERA5'"
             )
         return wdp
 

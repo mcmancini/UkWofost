@@ -455,11 +455,11 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
     }
 
     variable_mapping = {
-        "date": "DAY",
-        "tasmin": "TMIN",
-        "tasmax": "TMAX",
-        "pr": "RAIN",
-        "wspeed": "WIND",
+        "Date": "DAY",
+        "tmin": "TMIN",
+        "tmax": "TMAX",
+        "prec": "RAIN",
+        "windspeed": "WIND",
     }
 
     # pylint: disable=R0913,C0103
@@ -467,7 +467,7 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
         self,
         parcel,
         delimiter=",",
-        dateformat="%Y-%m-%d",
+        dateformat="%d/%m/%Y",
         ETmodel="PM",
         force_reload=False,
     ):
@@ -540,13 +540,12 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
         """
         obs = csv.DictReader(csv_file, delimiter=delimiter, quotechar='"')
         keys_to_remove = [
-            "tasmean",
-            "trange",
-            "swdown",
-            "lwdown",
-            "hurs",
-            "huss",
-            "psfc",
+            "swrad",
+            "lwrad",
+            "cloud",
+            "relhum",
+            "pres",
+            "winddir",
         ]
 
         renamed_obs = []
@@ -557,9 +556,9 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
 
             renamed_d["SNOWDEPTH"] = np.nan
             renamed_d["VAP"] = rh_to_vpress(
-                float(d["hurs"]), float(d["tasmean"])
+                float(d["relhum"]), float(renamed_d["TMIN"])
             )
-            renamed_d["IRRAD"] = float(d["swdown"])
+            renamed_d["IRRAD"] = float(d["swrad"])
 
             # Merge with the remaining data
             renamed_d.update(d)
