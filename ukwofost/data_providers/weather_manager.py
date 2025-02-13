@@ -540,12 +540,10 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
         """
         obs = csv.DictReader(csv_file, delimiter=delimiter, quotechar='"')
         keys_to_remove = [
-            "swrad",
-            "lwrad",
-            "cloud",
+            "swdown",
+            "lwdown",
             "relhum",
             "pres",
-            "winddir",
         ]
 
         renamed_obs = []
