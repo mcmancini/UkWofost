@@ -48,12 +48,16 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Deploy to MacOS Server via SSH (From Windows)
+      - name: Deploy to MacOS Server via SSH
         env:
           SERVER_USER: ${{ secrets.SERVER_USER }}
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
         shell: powershell
         run: |
-          # Deploy via SSH (assuming SSH key is already set up)
-          ssh -o StrictHostKeyChecking=no $env:SERVER_USER@$env:SERVER_HOST `
-          "cd /Users/Shared/UkWofost; git pull origin dev; source /Users/Shared/miniconda3/etc/profile.d/conda.sh; conda env create -f /Users/Shared/wofost-env.yml --prefix /Users/Shared/wofost-env || conda activate /Users/Shared/wofost; echo 'Model updated successfully!'"
+          ssh -vvv $env:SERVER_USER@$env:SERVER_HOST `
+          "cd /Users/Shared/UkWofost && `
+          git pull origin dev && `
+          source /Users/Shared/miniconda3/etc/profile.d/conda.sh && `
+          conda env create -f /Users/Shared/wofost-env.yml --prefix /Users/Shared/wofost-env || `
+          conda activate /Users/Shared/wofost && `
+          echo 'Model updated successfully!'"
