@@ -42,27 +42,26 @@ jobs:
     #     run: |
     #       python -m pytest --nbmake ./examples/examples.ipynb
   deploy:
-    needs: build 
-    # if: github.ref == 'refs/heads/dev'
-    runs-on: ubuntu-latest
+    needs: build
+    runs-on: self-hosted
     steps:
-      - name: Checkout
+      - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Deploy to MacOS Server via SSH
+      - name: Deploy to MacOS Server via SSH (From Windows)
         env:
           SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_KEY }}
           SERVER_USER: ${{ secrets.SERVER_USER }}
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
+        shell: pwsh
         run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh -vvv -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST "echo 'Connected successfully'"
-        # ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST << 'EOF'
-        #   cd /Users/Shared/UkWofost
-        #   git pull origin dev
-        #   source /Users/Shared/miniconda3/etc/profile.d/conda.sh
-        #   conda env create -f /Users/Shared/wofost-env.yml --prefix /Users/Shared/wofost-env || conda activate Users/Shared/wofost
-        #   echo "Model updated successfully!"
-        # EOF
+          New-Item -ItemType Directory -Force -Path $HOME\.ssh
+          $env:SSH_PRIVATE_KEY | Out-File -Encoding ascii -FilePath $HOME\.ssh\id_rsa
+          icacls "$HOME\.ssh\id_rsa" /inheritance:r /grant:r "$($env:USERNAME):R"
+
+          Start-Process ssh-agent -NoNewWindow
+          ssh-add $HOME\.ssh\id_rsa
+
+          # Deploy via SSH
+          ssh -o StrictHostKeyChecking=no $env:SERVER_USER@$env:SERVER_HOST `
+          "cd /Users/Shared/UkWofost; git pull origin dev; source /Users/Shared/miniconda3/etc/profile.d/conda.sh; conda env create -f /Users/Shared/wofost-env.yml --prefix /Users/Shared/wofost-env || conda activate /Users/Shared/wofost; echo 'Model updated successfully!'"
