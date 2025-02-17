@@ -43,7 +43,7 @@ jobs:
     #       python -m pytest --nbmake ./examples/examples.ipynb
   deploy:
     needs: build 
-    if: github.ref == 'refs/heads/dev'
+    # if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -58,10 +58,11 @@ jobs:
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST << 'EOF'
-            cd /Users/Shared/UkWofost
-            git pull origin dev
-            source /Users/Shared/miniconda3/etc/profile.d/conda.sh
-            conda env create -f /Users/Shared/wofost-env.yml --prefix /Users/Shared/wofost-env || conda activate Users/Shared/wofost
-            echo "Model updated successfully!"
-          EOF
+          ssh -vvv -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST "echo 'Connected successfully'"
+        # ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST << 'EOF'
+        #   cd /Users/Shared/UkWofost
+        #   git pull origin dev
+        #   source /Users/Shared/miniconda3/etc/profile.d/conda.sh
+        #   conda env create -f /Users/Shared/wofost-env.yml --prefix /Users/Shared/wofost-env || conda activate Users/Shared/wofost
+        #   echo "Model updated successfully!"
+        # EOF
