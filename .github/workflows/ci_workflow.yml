@@ -55,9 +55,5 @@ jobs:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
         shell: cmd
         run: |
-          mkdir %USERPROFILE%\.ssh
-          echo %SSH_PRIVATE_KEY% > %USERPROFILE%\.ssh\id_rsa
-          icacls "%USERPROFILE%\.ssh\id_rsa" /inheritance:r /grant:r "%USERNAME%:R"
-
           ssh -o StrictHostKeyChecking=no %SERVER_USER%@%SERVER_HOST% ^
-            "cd /Users/Shared/UkWofost && git pull origin dev && source /Users/Shared/miniconda3/etc/profile.d/conda.sh && conda env create -f /Users/Shared/wofost-env.yml --prefix /Users/Shared/wofost-env || conda activate /Users/Shared/wofost && echo 'Model updated successfully!'"
+          "cd /Users/Shared/UkWofost && git pull origin dev && source /Users/Shared/miniconda3/etc/profile.d/conda.sh && conda env create -f /Users/Shared/wofost-env.yml --prefix /Users/Shared/wofost-env || conda activate /Users/Shared/wofost && echo 'Model updated successfully!'"
