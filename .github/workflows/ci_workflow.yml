@@ -1,4 +1,4 @@
-name: macOS, Windows and Ubuntu Continuous Integration
+name: macOS, Windows and Ubuntu Continuous Integration and Deployment pipeline
 
 on: [push, pull_request]
 
@@ -41,3 +41,27 @@ jobs:
     #   - name: Notebook Testing
     #     run: |
     #       python -m pytest --nbmake ./examples/examples.ipynb
+  deploy:
+    needs: build 
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Deploy to MacOS Server via SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_KEY }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_HOST << 'EOF'
+            cd /Users/Shared/UkWofost
+            git pull origin dev
+            source /Users/Shared/miniconda3/etc/profile.d/conda.sh
+            conda env create -f /Users/Shared/wofost-env.yml --prefix /Users/Shared/wofost-env || conda activate Users/Shared/wofost
+            echo "Model updated successfully!"
+          EOF
