@@ -53,15 +53,11 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_KEY }}
           SERVER_USER: ${{ secrets.SERVER_USER }}
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
-        shell: pwsh
+        shell: cmd
         run: |
-          New-Item -ItemType Directory -Force -Path $HOME\.ssh
-          $env:SSH_PRIVATE_KEY | Out-File -Encoding ascii -FilePath $HOME\.ssh\id_rsa
-          icacls "$HOME\.ssh\id_rsa" /inheritance:r /grant:r "$($env:USERNAME):R"
+          mkdir %USERPROFILE%\.ssh
+          echo %SSH_PRIVATE_KEY% > %USERPROFILE%\.ssh\id_rsa
+          icacls "%USERPROFILE%\.ssh\id_rsa" /inheritance:r /grant:r "%USERNAME%:R"
 
-          Start-Process ssh-agent -NoNewWindow
-          ssh-add $HOME\.ssh\id_rsa
-
-          # Deploy via SSH
-          ssh -o StrictHostKeyChecking=no $env:SERVER_USER@$env:SERVER_HOST `
-          "cd /Users/Shared/UkWofost; git pull origin dev; source /Users/Shared/miniconda3/etc/profile.d/conda.sh; conda env create -f /Users/Shared/wofost-env.yml --prefix /Users/Shared/wofost-env || conda activate /Users/Shared/wofost; echo 'Model updated successfully!'"
+          ssh -o StrictHostKeyChecking=no %SERVER_USER%@%SERVER_HOST% ^
+            "cd /Users/Shared/UkWofost && git pull origin dev && source /Users/Shared/miniconda3/etc/profile.d/conda.sh && conda env create -f /Users/Shared/wofost-env.yml --prefix /Users/Shared/wofost-env || conda activate /Users/Shared/wofost && echo 'Model updated successfully!'"
