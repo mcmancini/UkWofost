@@ -1,3 +1,5 @@
+[![macOS, Windows and Ubuntu Continuous Integration and Deployment](https://github.com/mcmancini/UkWofost/actions/workflows/ci_workflow.yml/badge.svg)](https://github.com/mcmancini/UkWofost/actions/workflows/ci_workflow.yml)
+
 # UK WOFOST
 
 UK specific implementation of the [`WOFOST`](https://www.wur.nl/en/research-results/research-institutes/environmental-research/facilities-tools/software-models-and-databases/wofost.htm) crop yield simulation model in order to estimate future crop yields at the parcel level for the UK based on [`UKCP18 downscaled climate projections`](https://catalogue.ceda.ac.uk/uuid/8194b416cbee482b89e0dfbe17c5786c?search_url=%2F%253Fpage%253D20%26q%253Dprecipitation%2B%26record_types%253DObservation) at 1km from CEH Chess-Scape. Underlying soil data required to run the crop yield model come from [`SoilGrids`](https://www.isric.org/explore/soilgrids) or from the [`World Harmonized Soil Database`](https://www.fao.org/soils-portal/data-hub/soil-maps-and-databases/harmonized-world-soil-database-v12/en/) from FAO.
