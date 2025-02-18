@@ -1,0 +1,15 @@
+[dem_parameters]
+db_name = terrain_50
+host = localhost
+username = ${SQL_user}
+password = ${SQL_pwd}
+port = 5432
+
+[data_dirs]
+chess_climate_dir = path\to\ClimateData\chess\
+downscaled_climate_dir = path\to\ClimateData\downscaled\
+era_reanalysis_climate_dir = path\to\ClimateData\era5
+soil_dir = path\to\SoilData\
+crop_dir = path\to\CropData\
+management_dir = path\to\ManagementData\
+parcel_dir = path\to\ParcelData\
