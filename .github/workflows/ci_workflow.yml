@@ -67,6 +67,6 @@ jobs:
           "cd /Users/Shared/UkWofost && `
           git pull origin dev && `
           source /Users/Shared/miniconda3/etc/profile.d/conda.sh && `
-          conda env update -f /Users/Shared/wofost-env.yml --name wofost || `
-          conda activate /Users/Shared/wofost && `
+          conda env update -f /Users/Shared/UkWofost/wofost-env.yml --name wofost || `
+          conda activate /Users/Shared/miniconda3/envs/wofost && `
           echo 'Model updated successfully!'"
