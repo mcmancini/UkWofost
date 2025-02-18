@@ -64,7 +64,7 @@ jobs:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
         shell: powershell
         run: |
-          ssh -o KexAlgorithms=+diffie-hellman-group14-sha256,diffie-hellman-group-exchange-sha256 -i $HOME\.ssh\id_rsa_github_CD -vvv $env:SERVER_USER@$env:SERVER_HOST
+          ssh -o KexAlgorithms=diffie-hellman-group14-sha512 -i $HOME\.ssh\id_rsa_github_CD -vvv $env:SERVER_USER@$env:SERVER_HOST
           "cd /Users/Shared/UkWofost && `
           git pull origin dev && `
           source /Users/Shared/miniconda3/etc/profile.d/conda.sh && `
