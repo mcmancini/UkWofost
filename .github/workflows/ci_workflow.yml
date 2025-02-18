@@ -56,21 +56,6 @@ jobs:
           $env:DEPLOY_KEY = "${{ secrets.DEPLOY_KEY }}" -replace "`r", ""
           $env:DEPLOY_KEY | Out-File -Encoding ASCII -NoNewline $HOME\.ssh\id_rsa_github_CD
           icacls $HOME\.ssh\id_rsa_github_CD /inheritance:r /grant:r "$($env:USERNAME):F"
-          
-          # Configure SSH to use supported KEX algorithms
-          $sshConfig = @"
-          Host ${{ secrets.SERVER_HOST }}
-            HostName ${{ secrets.SERVER_HOST }}
-            User ${{ secrets.SERVER_USER }}
-            IdentityFile $HOME\.ssh\id_rsa_github_CD
-            KexAlgorithms diffie-hellman-group14-sha256,diffie-hellman-group16-sha512,curve25519-sha256
-            StrictHostKeyChecking no
-          "@
-              $sshConfig | Out-File -Encoding ASCII -NoNewline $HOME\.ssh\config
-
-              # Add the server to known hosts
-              ssh-keyscan -H ${{ secrets.SERVER_HOST }} | Out-File -Append -Encoding ASCII $HOME\.ssh\known_hosts
-
 
       - name: Deploy to MacOS Server via SSH
         env:
