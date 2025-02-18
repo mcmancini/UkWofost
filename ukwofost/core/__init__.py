@@ -6,10 +6,11 @@
 UkWofost package initialisation file
 """
 
+import os
 from ukwofost.core.config_parser import ConfigReader
 from ukwofost.utility.paths import ROOT_DIR
 
-config_path = ROOT_DIR + "\\config.ini"
+config_path = os.path.join(ROOT_DIR, "config.ini")
 # pylint: disable=E1101
 app_config = ConfigReader(config_path)
 # pylint: enable=E1101
