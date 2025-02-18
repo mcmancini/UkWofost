@@ -3,36 +3,36 @@ name: macOS, Windows and Ubuntu Continuous Integration and Deployment pipeline
 on: [push, pull_request]
 
 jobs:
-  # build:
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     matrix:
-  #       node-version: [20.x]
-  #       os: [macOS-latest, windows-latest, ubuntu-latest]
-  #       python-version:
-  #         - 3.11.6
-  #   defaults:
-  #     run:
-  #       shell: bash -el {0}
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        node-version: [20.x]
+        os: [macOS-latest, windows-latest, ubuntu-latest]
+        python-version:
+          - 3.11.6
+    defaults:
+      run:
+        shell: bash -el {0}
 
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
 
-  #     - name: Configuring Conda
-  #       uses: conda-incubator/setup-miniconda@v2
-  #       with:
-  #         python-version: ${{ matrix.python-version }}
-  #         miniconda-version: "latest"
-  #         activate-environment: anaconda-client-env
-  #         environment-file: wofost-env.yml
-  #         auto-activate-base: false
+      - name: Configuring Conda
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+          miniconda-version: "latest"
+          activate-environment: anaconda-client-env
+          environment-file: wofost-env.yml
+          auto-activate-base: false
 
-  #     - name: Quality Assurance
-  #       run: |
-  #         python -m black --check ./ukwofost/
-  #         python -m flake8 ./ukwofost/ --count --show-source --statistics
-  #         python -m isort --apply .
+      - name: Quality Assurance
+        run: |
+          python -m black --check ./ukwofost/
+          python -m flake8 ./ukwofost/ --count --show-source --statistics
+          python -m isort --apply .
 
       # - name: Unit Testing
       #   run: |
@@ -44,7 +44,7 @@ jobs:
   deploy:
     # needs: build
     runs-on: self-hosted
-    # if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -63,7 +63,7 @@ jobs:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
         shell: powershell
         run: |
-          ssh -vvv -i $HOME\.ssh\id_rsa_github_CD $env:SERVER_USER@$env:SERVER_HOST `
+          ssh -i $HOME\.ssh\id_rsa_github_CD $env:SERVER_USER@$env:SERVER_HOST `
           "cd /Users/Shared/UkWofost && `
           git pull origin dev && `
           source /Users/Shared/miniconda3/etc/profile.d/conda.sh && `
