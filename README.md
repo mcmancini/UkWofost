@@ -1,4 +1,4 @@
-[![macOS, Windows and Ubuntu Continuous Integration and Deployment](https://github.com/mcmancini/UkWofost/actions/workflows/ci_workflow.yml/badge.svg)](https://github.com/mcmancini/UkWofost/actions/workflows/ci_workflow.yml)
+[![macOS, Windows and Ubuntu CI/CD](https://github.com/mcmancini/UkWofost/actions/workflows/ci_workflow.yml/badge.svg)](https://github.com/mcmancini/UkWofost/actions/workflows/ci_workflow.yml)
 
 # UK WOFOST
 
