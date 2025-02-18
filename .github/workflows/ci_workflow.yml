@@ -64,9 +64,8 @@ jobs:
         shell: powershell
         run: |
           ssh -i $HOME\.ssh\id_rsa_github_CD $env:SERVER_USER@$env:SERVER_HOST `
-          "cd /Users/Shared/UkWofost && `
-          git pull origin dev && `
-          source /Users/Shared/miniconda3/etc/profile.d/conda.sh && `
-          conda env update -f /Users/Shared/UkWofost/wofost-env.yml --name wofost || `
-          conda activate /Users/Shared/miniconda3/envs/wofost && `
+          "cd /Users/Shared/UkWofost && \
+          git pull origin dev && \
+          source /Users/Shared/miniconda3/etc/profile.d/conda.sh && \
+          conda env update -f /Users/Shared/UkWofost/wofost-env.yml --name wofost && \
           echo 'Model updated successfully!'"
