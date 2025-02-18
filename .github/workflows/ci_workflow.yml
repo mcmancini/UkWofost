@@ -44,10 +44,18 @@ jobs:
   deploy:
     needs: build
     runs-on: self-hosted
-    if: github.event_name == 'pull_request' && (github.base_ref == 'dev' || github.base_ref == 'main')
+    if: github.base_ref == 'dev' || github.base_ref == 'main'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+
+      - name: Setup SSH Key
+        shell: powershell
+        run: |
+          mkdir -Force $HOME\.ssh
+          $env:DEPLOY_KEY = "${{ secrets.DEPLOY_KEY }}" -replace "`r", ""
+          $env:DEPLOY_KEY | Out-File -Encoding ASCII -NoNewline $HOME\.ssh\id_rsa_github_CD
+          icacls $HOME\.ssh\id_rsa_github_CD /inheritance:r /grant:r "$($env:USERNAME):F"
 
       - name: Deploy to MacOS Server via SSH
         env:
@@ -55,10 +63,10 @@ jobs:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
         shell: powershell
         run: |
-          ssh -vvv $env:SERVER_USER@$env:SERVER_HOST `
+          ssh -i $HOME\.ssh\id_rsa_github_CD $env:SERVER_USER@$env:SERVER_HOST `
           "cd /Users/Shared/UkWofost && `
           git pull origin dev && `
           source /Users/Shared/miniconda3/etc/profile.d/conda.sh && `
-          conda env create -f /Users/Shared/wofost-env.yml --prefix /Users/Shared/wofost-env || `
-          conda activate /Users/Shared/wofost && `
+          conda env update -f /Users/Shared/UkWofost/wofost-env.yml --name wofost || `
+          conda activate /Users/Shared/miniconda3/envs/wofost && `
           echo 'Model updated successfully!'"
