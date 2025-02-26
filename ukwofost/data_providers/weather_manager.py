@@ -25,13 +25,13 @@ from ukwofost.core import app_config
 from ukwofost.core.parcel import Parcel
 from ukwofost.core.utils import (
     calc_doy,
+    estimate_angstrom,
     find_closest_point,
     get_dtm_values,
     lonlat2osgrid,
     nearest,
     osgrid2lonlat,
     rh_to_vpress,
-    estimate_angstrom,
 )
 
 
@@ -468,6 +468,7 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
         parcel,
         delimiter=",",
         dateformat="%d/%m/%Y",
+        possible_date_formats=None,
         ETmodel="PM",
         force_reload=False,
     ):
@@ -477,6 +478,8 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
         self.parcel_id = parcel.parcel_id
         self.elevation = parcel.elevation
         self.dateformat = dateformat
+        if possible_date_formats is None:
+            possible_date_formats = ["%d/%m/%Y", "%Y-%m-%d"]
         self.ETmodel = ETmodel
         self.nodata_value = -99
         self.has_sunshine = False
@@ -568,8 +571,16 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
 
         for i, d in enumerate(renamed_obs):
             try:
-                day = None
-                day = csvdate_to_date(d["DAY"], self.dateformat)
+                for fmt in self.possible_date_formats:
+                    try:
+                        day = csvdate_to_date(d["DAY"], fmt)
+                        break
+                    except ValueError:
+                        continue
+                else:
+                    raise ValueError(
+                        f"Date {d['DAY']} is not in a recognized format"
+                    )
                 row = {"DAY": day}
                 for label, func in self.obs_conversions.items():
                     value = float(d[label])

@@ -28,17 +28,20 @@ agromanagment can be found at https://tinyurl.com/bdcmj5b7
 
 from ukwofost.core.crop_manager import Crop
 from ukwofost.core.defaults import defaults
+from ukwofost.core.parcel import Parcel
 from ukwofost.core.simulation_manager import WofostSimulator
 from ukwofost.core.utils import lonlat2osgrid
 
 # Define input parameters
 LON, LAT = -1.670330465465696, 55.028574354445425
-CROP = "wheat"
+CROP = "winter_wheat"
 YEAR = 2019
+PARCEL_ID = 578422
+parcel = Parcel(PARCEL_ID)
 # Build Wofost simulator
-os_code = lonlat2osgrid((LON, LAT), 10)
+# os_code = lonlat2osgrid((LON, LAT), 10)
 sim = WofostSimulator(
-    location=os_code, weather_provider="ERA5", soil_provider="SoilGrids"
+    location=parcel, weather_provider="Mesoclim", soil_provider="SoilGrids"
 )
 
 crop_management = defaults.get("management").get(CROP)
