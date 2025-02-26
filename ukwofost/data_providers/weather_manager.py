@@ -479,7 +479,7 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
         self.elevation = parcel.elevation
         self.dateformat = dateformat
         if possible_date_formats is None:
-            possible_date_formats = ["%d/%m/%Y", "%Y-%m-%d"]
+            self.possible_date_formats = ["%d/%m/%Y", "%Y-%m-%d"]
         self.ETmodel = ETmodel
         self.nodata_value = -99
         self.has_sunshine = False
