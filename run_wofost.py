@@ -25,15 +25,18 @@ values before passing the crop_params dictionary when the instance
 of the Crop class is instantiated (line 45). More information on
 agromanagment can be found at https://tinyurl.com/bdcmj5b7
 """
+import logging
 
 from ukwofost.core.crop_manager import Crop
 from ukwofost.core.defaults import defaults
 from ukwofost.core.parcel import Parcel
 from ukwofost.core.simulation_manager import WofostSimulator
-from ukwofost.core.utils import lonlat2osgrid
+# from ukwofost.core.utils import lonlat2osgrid
+
+logging.disable(logging.CRITICAL)
 
 # Define input parameters
-LON, LAT = -1.670330465465696, 55.028574354445425
+# LON, LAT = -1.670330465465696, 55.028574354445425
 CROP = "winter_wheat"
 YEAR = 2019
 PARCEL_ID = 578422
@@ -46,7 +49,7 @@ sim = WofostSimulator(
 
 crop_management = defaults.get("management").get(CROP)
 crop = Crop(calendar_year=YEAR, crop=CROP, **crop_management)
-crop_output = sim.run(crop_or_rotation=crop, output_flag="full")
+crop_output = sim.run(crop_or_rotation=crop, output_flag="summary")
 # # Define management
 # rotation = []
 # for item in zip(CROPS, YEARS):
