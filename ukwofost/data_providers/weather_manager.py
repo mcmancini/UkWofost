@@ -536,7 +536,7 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
             f"Contact: {contact}",
         ]
 
-    # pylint: disable=W4902, R0914
+    # pylint: disable=W4902, R0914, R0912
     def _read_observations(self, csv_file, delimiter):
         """
         Processes the rows with meteo data and converts into the correct units.
@@ -622,7 +622,7 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
                 msg = f"Failed computing a value for day '{day}' at row {i}"
                 self.logger.warn(msg)
 
-    # pylint: enable=W4902, R0914
+    # pylint: enable=W4902, R0914, R0912
 
     def _create_angstrom(self):
         """Find and assign Angstrom coefficients A and B"""

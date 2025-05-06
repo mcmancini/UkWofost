@@ -24,6 +24,7 @@ instances of the CropRotation class
 """
 
 import argparse
+import logging
 import math
 
 import pandas as pd
@@ -37,6 +38,7 @@ from ukwofost.core.defaults import (
 from ukwofost.core.simulation_manager import WofostSimulator
 from ukwofost.core.utils import find_contiguous_sets, lonlat2osgrid
 
+logging.disable(logging.CRITICAL)
 
 def apply_conversion(df_row):
     """
