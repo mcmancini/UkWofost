@@ -23,7 +23,7 @@ COPY .. /wofost
 
 WORKDIR /wofost
 
-RUN ${CONDA_PATH}/bin/conda create -f wofost-env.yml
+RUN ${CONDA_PATH}/bin/conda env create -f wofost-env.yml
 
 # Users
 ARG USERS="dw356 ik354 mh1176 trfb201 jm622 mcm216"
