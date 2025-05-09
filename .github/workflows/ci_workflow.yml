@@ -115,4 +115,4 @@ jobs:
           context: docker
           file: Dockerfile
           push: true
-          tags: ${{ github.repository | toLower }}:latest-${{ matrix.platform }}
+          tags: mcmancini/ukwofost:latest-${{ matrix.platform }}
