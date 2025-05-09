@@ -11,6 +11,12 @@ RUN arch=$(uname -m) && wget "https://repo.anaconda.com/miniconda/Miniconda3-lat
 RUN bash "${CONDA_PATH}/miniconda.sh" -b -u -p "${CONDA_PATH}"
 RUN rm -f "${CONDA_PATH}/miniconda.sh"
 
+# Users can run some apt commands and access conda
+RUN addgroup wofost-users
+
+# Make conda command available to all
+RUN chown -R root:wofost-users "${CONDA_PATH}"
+
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
@@ -35,8 +41,6 @@ ARG COMMAND_EXPORT_PATH_BASHRC="export PATH=\"${CONDA_PATH}/bin:${PATH_DOLLAR}\"
 # $COMMAND_EXPORT_PATH_BASHRC contains: export PATH="<conda_path>/bin:$PATH"
 RUN echo "${COMMAND_EXPORT_PATH_BASHRC}" | tee -a "/etc/bash.bashrc"
 
-# Users can run some apt commands
-RUN addgroup rstudio-users
 
 ARG DEFAULT_PASSWORD="orchid"
 
@@ -49,17 +53,20 @@ RUN bash -c ' \
             user_id="${USER_IDS_ARRAY[i]}" && \
             adduser --disabled-password --comment "" --uid "${user_id}" --shell /bin/bash "${user}" && \
             echo "${user}:${DEFAULT_PASSWORD}" | chpasswd && \
-            usermod --append --groups rstudio-users "${user}" ; \
+            usermod --append --groups wofost-users "${user}" ; \
         done \
     '
 
+# Initalize conda for everyone
+RUN ${CONDA_PATH}/bin/conda init
+
 # Let users install packages, update package list, search
 RUN mkdir -p /etc/sudoers.d
-RUN bash -c 'echo "User_Alias MYUSERS = ${USERS// /,}" | tee /etc/sudoers.d/group-rstudio-users'
-RUN echo "Cmnd_Alias INSTALL = /usr/bin/apt-get install *, /usr/bin/apt install *" >> /etc/sudoers.d/group-rstudio-users
-RUN echo "Cmnd_Alias UPDATE = /usr/bin/apt-get update, /usr/bin/apt update" >> /etc/sudoers.d/group-rstudio-users
-RUN echo "Cmnd_Alias SEARCH = /usr/bin/apt-get search, /usr/bin/apt search" >> /etc/sudoers.d/group-rstudio-users
-RUN echo "MYUSERS ALL = INSTALL, UPDATE, SEARCH" >> /etc/sudoers.d/group-rstudio-users
+RUN bash -c 'echo "User_Alias MYUSERS = ${USERS// /,}" | tee /etc/sudoers.d/group-wofost-users'
+RUN echo "Cmnd_Alias INSTALL = /usr/bin/apt-get install *, /usr/bin/apt install *" >> /etc/sudoers.d/group-wofost-users
+RUN echo "Cmnd_Alias UPDATE = /usr/bin/apt-get update, /usr/bin/apt update" >> /etc/sudoers.d/group-wofost-users
+RUN echo "Cmnd_Alias SEARCH = /usr/bin/apt-get search, /usr/bin/apt search" >> /etc/sudoers.d/group-wofost-users
+RUN echo "MYUSERS ALL = INSTALL, UPDATE, SEARCH" >> /etc/sudoers.d/group-wofost-users
 
 EXPOSE 22
 
