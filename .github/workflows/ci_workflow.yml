@@ -115,4 +115,4 @@ jobs:
           context: .
           file: docker/Dockerfile
           push: true
-          tags: mcmancini/ukwofost:latest-${{ matrix.platform }}
+          tags: ghcr.io/mcmancini/ukwofost:latest-${{ matrix.platform }}
