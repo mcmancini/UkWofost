@@ -2,6 +2,10 @@ FROM python:3.11.6
 
 ARG CONDA_PATH=/miniconda
 
+COPY .. /wofost
+WORKDIR /wofost
+RUN ls -ahl
+
 # Miniconda https://docs.anaconda.com/miniconda/
 RUN mkdir -p "${CONDA_PATH}"
 RUN arch=$(uname -m) && wget "https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-${arch}.sh" -O "${CONDA_PATH}/miniconda.sh"
@@ -19,11 +23,6 @@ RUN apt-get update && \
     apt-get -y autoremove --purge && \
     rm -rf /var/lib/apt/lists/* /tmp/*
 
-COPY . /wofost
-
-WORKDIR /wofost
-
-RUN ls -ahl
 
 RUN ${CONDA_PATH}/bin/conda env create -f wofost-env.yml
 
