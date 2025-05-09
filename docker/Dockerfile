@@ -13,7 +13,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get -y --no-install-recommends install \
     # Generate SSH key for usage with git
-    openssh-client && \
+    openssh-server && \
     apt-get -y upgrade && \
     apt-get -y clean && \
     apt-get -y autoremove --purge && \
