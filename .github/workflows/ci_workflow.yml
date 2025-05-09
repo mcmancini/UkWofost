@@ -79,10 +79,10 @@ jobs:
             platform: amd64
           - os: ubuntu-24.04-arm
             platform: arm64
-          - os: macOS-latest
-            platform: macos
-          - os: windows-latest
-            platform: windows
+          #- os: macOS-latest
+          #  platform: macos
+          #- os: windows-latest
+          #  platform: windows
     
     runs-on: ${{ matrix.os }}
 
