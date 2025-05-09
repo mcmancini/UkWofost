@@ -19,9 +19,11 @@ RUN apt-get update && \
     apt-get -y autoremove --purge && \
     rm -rf /var/lib/apt/lists/* /tmp/*
 
-COPY .. /wofost
+COPY . /wofost
 
 WORKDIR /wofost
+
+RUN ls -ahl
 
 RUN ${CONDA_PATH}/bin/conda env create -f wofost-env.yml
 
