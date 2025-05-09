@@ -1,0 +1,13 @@
+services:
+  wofost:
+    # Pick one image
+    image: ghcr.io/ukwofost/wofost:latest-macos
+    #image: ghcr.io/ukwofost/wofost:latest-amd64
+    #image: ghcr.io/ukwofost/wofost:latest-arm64
+    #image: ghcr.io/ukwofost/wofost:latest-macos
+    #image: ghcr.io/ukwofost/wofost:latest-windows
+    container_name: wofost
+    ports:
+      - "10022:22"
+    volumes:
+      - /Users/Shared:/Users/Shared
