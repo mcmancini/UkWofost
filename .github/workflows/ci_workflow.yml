@@ -70,7 +70,6 @@ jobs:
           conda env update -f /Users/Shared/UkWofost/wofost-env.yml --name wofost && \
           echo 'Model updated successfully!'"
   build-docker:
-    needs: build
     strategy:
       fail-fast: false # stop GH from cancelling all matrix builds if one fails
       matrix:
