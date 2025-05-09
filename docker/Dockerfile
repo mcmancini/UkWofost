@@ -4,8 +4,6 @@ ARG CONDA_PATH=/miniconda
 
 COPY . /wofost
 WORKDIR /wofost
-RUN ls -ahl .
-RUN ls -ahl ..
 
 # Miniconda https://docs.anaconda.com/miniconda/
 RUN mkdir -p "${CONDA_PATH}"
