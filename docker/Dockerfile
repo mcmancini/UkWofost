@@ -2,9 +2,10 @@ FROM python:3.11.6
 
 ARG CONDA_PATH=/miniconda
 
-COPY .. /wofost
+COPY . /wofost
 WORKDIR /wofost
-RUN ls -ahl
+RUN ls -ahl .
+RUN ls -ahl ..
 
 # Miniconda https://docs.anaconda.com/miniconda/
 RUN mkdir -p "${CONDA_PATH}"
