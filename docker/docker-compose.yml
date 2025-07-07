@@ -10,5 +10,6 @@ services:
     ports:
       - "10022:22"
     volumes:
+      - "C:/Users/mcm216/OneDrive - University of Exeter/Desktop/WofostSimulator:/Users/Shared/WofostSimulator"
       - "C:/Users/mcm216/OneDrive - University of Exeter/Data:/Users/Shared"
       - "D:/Documents/GitHub/UkWofost:/wofost/config.ini"
