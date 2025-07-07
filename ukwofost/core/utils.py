@@ -796,9 +796,15 @@ def get_dtm_values(parcel_os_code, app_config):
         dict_keys = ["x", "y", "elevation", "slope", "aspect"]
         dtm_dict = dtm_dict = dict(zip(dict_keys, dtm_vals))
         return dtm_dict
-    except psycopg2.DatabaseError as error:
-        print(error)
+
+    except psycopg2.OperationalError as error:
+        print(f"Database connection failed: {error}")
         return None
+
+    except Exception as error:
+        print(f"An unexpected error occurred: {error}")
+        return None
+
     finally:
         if conn is not None:
             conn.close()
