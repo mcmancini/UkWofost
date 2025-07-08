@@ -751,17 +751,19 @@ def get_dtm_values(parcel_os_code, app_config):
     'x', 'y', 'elevation', 'slope', 'aspect'
     """
     # pylint: disable=R0914
-    db_name = app_config.dem_parameters["db_name"]
-    db_user = app_config.dem_parameters["username"]
-    db_password = app_config.dem_parameters["password"]
-
-    conn = None
 
     # retrieve lon, lat from parcel_os_code and create a bounding box to
     # find the closest 50m grid cell in the DEM
     lon, lat = osgrid2lonlat(parcel_os_code)
     lon_min, lon_max, lat_min, lat_max = lon - 50, lon + 50, lat - 50, lat + 50
+    conn = None
     try:
+        db_name = os.path.expandvars(app_config.dem_parameters.get("db_name", ""))
+        db_name = None if not db_name else db_name
+        db_user = os.path.expandvars(app_config.dem_parameters.get("username", ""))
+        db_user = None if not db_user else db_user
+        db_password = os.path.expandvars(app_config.dem_parameters.get("password", ""))
+        db_password = None if not db_password else db_password
         conn = psycopg2.connect(
             user=db_user,
             password=db_password,
@@ -798,13 +800,17 @@ def get_dtm_values(parcel_os_code, app_config):
         return dtm_dict
 
     except psycopg2.OperationalError as error:
-        print(f"Database connection failed: {error}")
-        return None
+        print(
+            f"WARNING: Database connection failed: {error}"
+            f" - returning default values."
+        )
+        return {"x": 0, "y": 0, "elevation": 0, "slope": 0, "aspect": 0}
 
+    #pylint: disable=W0718
     except Exception as error:
         print(f"An unexpected error occurred: {error}")
-        return None
-
+        return {"x": 0, "y": 0, "elevation": 0, "slope": 0, "aspect": 0}
+    #pylint: enable=W0718
     finally:
         if conn is not None:
             conn.close()
