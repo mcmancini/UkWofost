@@ -758,11 +758,17 @@ def get_dtm_values(parcel_os_code, app_config):
     lon_min, lon_max, lat_min, lat_max = lon - 50, lon + 50, lat - 50, lat + 50
     conn = None
     try:
-        db_name = os.path.expandvars(app_config.dem_parameters.get("db_name", ""))
+        db_name = os.path.expandvars(
+            app_config.dem_parameters.get("db_name", "")
+        )
         db_name = None if not db_name else db_name
-        db_user = os.path.expandvars(app_config.dem_parameters.get("username", ""))
+        db_user = os.path.expandvars(
+            app_config.dem_parameters.get("username", "")
+        )
         db_user = None if not db_user else db_user
-        db_password = os.path.expandvars(app_config.dem_parameters.get("password", ""))
+        db_password = os.path.expandvars(
+            app_config.dem_parameters.get("password", "")
+        )
         db_password = None if not db_password else db_password
         conn = psycopg2.connect(
             user=db_user,
@@ -806,11 +812,11 @@ def get_dtm_values(parcel_os_code, app_config):
         )
         return {"x": 0, "y": 0, "elevation": 0, "slope": 0, "aspect": 0}
 
-    #pylint: disable=W0718
+    # pylint: disable=W0718
     except Exception as error:
         print(f"An unexpected error occurred: {error}")
         return {"x": 0, "y": 0, "elevation": 0, "slope": 0, "aspect": 0}
-    #pylint: enable=W0718
+    # pylint: enable=W0718
     finally:
         if conn is not None:
             conn.close()
