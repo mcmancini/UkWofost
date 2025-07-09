@@ -4,6 +4,7 @@ channels:
   - defaults
 dependencies:
   - black
+  - fastapi
   - flake8
   - gdal
   - geopandas
@@ -19,6 +20,7 @@ dependencies:
   - pyyaml
   - sqlalchemy
   - tqdm
+  - uvicorn
   - xarray
   - yaml
   - pip:
