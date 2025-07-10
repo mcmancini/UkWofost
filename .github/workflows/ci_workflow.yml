@@ -44,7 +44,7 @@ jobs:
   deploy:
     needs: build
     runs-on: self-hosted
-    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    # if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
