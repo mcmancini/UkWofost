@@ -56,8 +56,8 @@ jobs:
       - name: Setup SSH Key for MacOS server
         shell: powershell
         run: |
-          $env:DEPLOY_KEY = "${{ secrets.DEPLOY_KEY }}"
-          [System.IO.File]::WriteAllText("$HOME\.ssh\id_rsa_macos_cd", $env:DEPLOY_KEY, [System.Text.Encoding]::UTF8)
+          $env:DEPLOY_KEY = "${{ secrets.DEPLOY_KEY }}" -replace "`r", ""
+          $env:DEPLOY_KEY | Out-File -Encoding ASCII -NoNewline $HOME\.ssh\id_rsa_macos_cd
           icacls $HOME\.ssh\id_rsa_macos_cd /inheritance:r /grant:r "$($env:USERNAME):F"
 
       - name: Deploy to MacOS Server via SSH
@@ -76,10 +76,8 @@ jobs:
       - name: Setup SSH Key for Ubuntu server
         shell: powershell
         run: |
-          $env:DEPLOY_UBUNTU_KEY = "${{ secrets.DEPLOY_UBUNTU_KEY }}"
-          [System.IO.File]::WriteAllText("$HOME\.ssh\id_rsa_ubuntu_cd", $env:DEPLOY_UBUNTU_KEY, [System.Text.Encoding]::UTF8)
-          $env:DEPLOY_UBUNTU_KEY = "${{ secrets.DEPLOY_UBUNTU_KEY }}"
-          [System.IO.File]::WriteAllText("$HOME\.ssh\id_rsa_ubuntu_cd", $env:DEPLOY_UBUNTU_KEY, [System.Text.Encoding]::UTF8)
+          $key = "${{ secrets.DEPLOY_UBUNTU_KEY }}"
+          [System.Convert]::FromBase64String($key) | Set-Content -Encoding Byte $HOME\.ssh\id_rsa_ubuntu_cd
           icacls $HOME\.ssh\id_rsa_ubuntu_cd /inheritance:r /grant:r "$($env:USERNAME):F"
 
       - name: Deploy to Ubuntu Server via SSH
@@ -89,8 +87,9 @@ jobs:
         shell: powershell
         run: |
           ssh -i $HOME\.ssh\id_rsa_ubuntu_cd $env:UBUNTU_SERVER_USER@$env:UBUNTU_SERVER_HOST `
-          "cd /Users/Shared/UkWofost && \
-          git pull origin dev && \
-          source /Users/Shared/miniconda3/etc/profile.d/conda.sh && \
-          conda env update -f /Users/Shared/UkWofost/wofost-env.yml --name wofost && \
+          "cd ~/Documents/Github/UkWofost && \
+          git fetch origin dev && \
+          git reset --hard origin/dev && \
+          source ~/miniconda3/etc/profile.d/conda.sh && \
+          conda env update -f ~/Documents/Github/UkWofost/wofost-env.yml --name wofost && \
           echo 'Model updated successfully!'"
