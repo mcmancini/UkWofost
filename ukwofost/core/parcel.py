@@ -80,14 +80,18 @@ class Parcel:
         """Set parcel elevation if exists"""
         return self._calc_elevation(self.osgrid_code)
 
+    # pylint: disable=W0718
     @staticmethod
     def _calc_elevation(os_code):
         """Retrieve elevation of the centroid of the parcel"""
         try:
-            elevation = round(get_dtm_values(os_code, app_config)["elevation"])
-        except ConnectionError:
-            elevation = 0
-        return elevation
+            dtm_data = get_dtm_values(os_code, app_config)["elevation"]
+        except Exception as e:
+            print(f"Error retrieving elevation for OS code {os_code}: {e}")
+            dtm_data = 0.0
+        return round(dtm_data)
+
+    # pylint: enable=W0718
 
     def _calc_spatial_attributes(self):
         """
