@@ -76,8 +76,8 @@ jobs:
       - name: Setup SSH Key for Ubuntu server
         shell: powershell
         run: |
-          $key = "${{ secrets.DEPLOY_UBUNTU_KEY }}"
-          [System.Convert]::FromBase64String($key) | Set-Content -Encoding Byte $HOME\.ssh\id_rsa_ubuntu_cd
+          $env:DEPLOY_UBUNTU_KEY = "${{ secrets.DEPLOY_UBUNTU_KEY }}" -replace "`r", ""
+          $env:DEPLOY_KEY | Out-File -Encoding ASCII -NoNewline $HOME\.ssh\id_rsa_ubuntu_cd
           icacls $HOME\.ssh\id_rsa_ubuntu_cd /inheritance:r /grant:r "$($env:USERNAME):F"
 
       - name: Deploy to Ubuntu Server via SSH
