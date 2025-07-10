@@ -67,10 +67,10 @@ jobs:
         shell: powershell
         run: |
           ssh -i $HOME\.ssh\id_rsa_macos_cd $env:SERVER_USER@$env:SERVER_HOST `
-          "cd /Users/Shared/UkWofost && \
+          "cd ~/Documents/Github/UkWofost && \
           git pull origin dev && \
-          source /Users/Shared/miniconda3/etc/profile.d/conda.sh && \
-          conda env update -f /Users/Shared/UkWofost/wofost-env.yml --name wofost && \
+          source ~/miniconda3/etc/profile.d/conda.sh && \
+          conda env update -f ~/Documents/Github/UkWofost/wofost-env.yml --name wofost && \
           echo 'Model updated successfully!'"
 
       - name: Setup SSH Key for Ubuntu server
