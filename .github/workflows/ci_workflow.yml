@@ -56,9 +56,9 @@ jobs:
       - name: Setup SSH Key for MacOS server
         shell: powershell
         run: |
-          $env:DEPLOY_KEY = "${{ secrets.DEPLOY_KEY }}"
-          [System.IO.File]::WriteAllText("$HOME\.ssh\id_rsa_macos_cd", $env:DEPLOY_KEY, [System.Text.Encoding]::UTF8)
-          icacls $HOME\.ssh\id_rsa_macos_cd /inheritance:r /grant:r "$($env:USERNAME):F"
+          $env:DEPLOY_KEY = "${{ secrets.DEPLOY_UBUNTU_KEY }}" -replace "`r", ""
+          $env:DEPLOY_KEY | Out-File -Encoding ASCII -NoNewline $HOME\.ssh\id_rsa_ubuntu_cd
+          icacls $HOME\.ssh\id_rsa_ubuntu_cd /inheritance:r /grant:r "$($env:USERNAME):F"
 
       - name: Deploy to MacOS Server via SSH
         env:
