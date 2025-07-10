@@ -88,7 +88,8 @@ jobs:
         run: |
           ssh -i $HOME\.ssh\id_rsa_ubuntu_cd $env:UBUNTU_SERVER_USER@$env:UBUNTU_SERVER_HOST `
           "cd ~/Documents/Github/UkWofost && \
-          git pull origin dev && \
+          git fetch origin dev && \
+          git reset --hard origin/dev && \
           source ~/miniconda3/etc/profile.d/conda.sh && \
           conda env update -f ~/Documents/Github/UkWofost/wofost-env.yml --name wofost && \
           echo 'Model updated successfully!'"
