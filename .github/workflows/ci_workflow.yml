@@ -49,13 +49,16 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Setup SSH Key
+      - name: Create SSH Directory
+        shell: powershell
+        run: mkdir -Force $HOME\.ssh
+
+      - name: Setup SSH Key for MacOS server
         shell: powershell
         run: |
-          mkdir -Force $HOME\.ssh
           $env:DEPLOY_KEY = "${{ secrets.DEPLOY_KEY }}" -replace "`r", ""
-          $env:DEPLOY_KEY | Out-File -Encoding ASCII -NoNewline $HOME\.ssh\id_rsa_github_CD
-          icacls $HOME\.ssh\id_rsa_github_CD /inheritance:r /grant:r "$($env:USERNAME):F"
+          $env:DEPLOY_KEY | Out-File -Encoding ASCII -NoNewline $HOME\.ssh\id_rsa_macos_cd
+          icacls $HOME\.ssh\id_rsa_macos_cd /inheritance:r /grant:r "$($env:USERNAME):F"
 
       - name: Deploy to MacOS Server via SSH
         env:
@@ -63,7 +66,27 @@ jobs:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
         shell: powershell
         run: |
-          ssh -i $HOME\.ssh\id_rsa_github_CD $env:SERVER_USER@$env:SERVER_HOST `
+          ssh -i $HOME\.ssh\id_rsa_macos_cd $env:SERVER_USER@$env:SERVER_HOST `
+          "cd /Users/Shared/UkWofost && \
+          git pull origin dev && \
+          source /Users/Shared/miniconda3/etc/profile.d/conda.sh && \
+          conda env update -f /Users/Shared/UkWofost/wofost-env.yml --name wofost && \
+          echo 'Model updated successfully!'"
+
+      - name: Setup SSH Key for Ubuntu server
+        shell: powershell
+        run: |
+          $env:DEPLOY_KEY = "${{ secrets.DEPLOY_UBUNTU_KEY }}" -replace "`r", ""
+          $env:DEPLOY_KEY | Out-File -Encoding ASCII -NoNewline $HOME\.ssh\id_rsa_ubuntu_cd
+          icacls $HOME\.ssh\id_rsa_ubuntu_cd /inheritance:r /grant:r "$($env:USERNAME):F"
+
+      - name: Deploy to Ubuntu Server via SSH
+        env:
+          UBUNTU_SERVER_USER: ${{ secrets.UBUNTU_SERVER_USER }}
+          UBUNTU_SERVER_HOST: ${{ secrets.UBUNTU_SERVER_HOST }}
+        shell: powershell
+        run: |
+          ssh -i $HOME\.ssh\id_rsa_ubuntu_cd $env:UBUNTU_SERVER_USER@$env:UBUNTU_SERVER_HOST `
           "cd /Users/Shared/UkWofost && \
           git pull origin dev && \
           source /Users/Shared/miniconda3/etc/profile.d/conda.sh && \
