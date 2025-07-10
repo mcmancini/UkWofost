@@ -87,7 +87,7 @@ jobs:
         shell: powershell
         run: |
           ssh -i $HOME\.ssh\id_rsa_ubuntu_cd $env:UBUNTU_SERVER_USER@$env:UBUNTU_SERVER_HOST `
-          "cd ~/Documents/GithubUkWofost && \
+          "cd ~/Documents/Github/UkWofost && \
           git pull origin dev && \
           source ~/miniconda3/etc/profile.d/conda.sh && \
           conda env update -f ~/Documents/Github/UkWofost/wofost-env.yml --name wofost && \
