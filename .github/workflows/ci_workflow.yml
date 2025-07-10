@@ -42,7 +42,7 @@ jobs:
     #     run: |
     #       python -m pytest --nbmake ./examples/examples.ipynb
   deploy:
-    # needs: build
+    needs: build
     runs-on: self-hosted
     if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
     steps:
