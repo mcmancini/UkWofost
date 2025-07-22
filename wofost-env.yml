@@ -3,8 +3,10 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  - arrow
   - black
   - fastapi
+  - fastparquet
   - flake8
   - gdal
   - geopandas
@@ -14,6 +16,7 @@ dependencies:
   - pandas
   - pip
   - psycopg2
+  - pyarrow
   - pylint
   - pyproj
   - python=3.11.6

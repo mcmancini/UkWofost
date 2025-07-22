@@ -470,7 +470,7 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
         dateformat="%d/%m/%Y",
         possible_date_formats=None,
         ETmodel="PM",
-        force_reload=False,
+        force_reload=True,
     ):
         WeatherDataProvider.__init__(self)
         self.longitude = parcel.lon
@@ -485,6 +485,8 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
         self.has_sunshine = False
         self._create_header()
         self._create_angstrom()
+
+        print("ParcelWeatherDataProvider")
 
         if not os.path.exists(self.fp_csv_fname):
             msg = f"Cannot find weather file at: {self.fp_csv_fname}"
@@ -672,6 +674,112 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
             )
             self.logger.warning(msg)
 
+
+
+
+class MesoclimWeatherDataProvider(WeatherDataProvider):
+    """
+    Class based on the pcse.fileinput.CSVWeatherDataProvider in WOFOST
+    to load weather data for a specific parcel from csv files. Parcels
+    are the highest resolution possible for the UK farm model that relies on
+    an UK implementation of WOFOST for the estimation of future crop yields.
+    Parcel weather data comes from downscaling procedures from Ilya Maclean
+    and Jon Mosedale
+
+    Parameters
+    ----------
+    :param parcel (Parcel): an instance of the class Parcel for which weather
+        data needs to be retrieved
+    :param delimiter: CSV delimiter
+    :param dateformat: date format to be read. Default is '%Y%m%d'
+    :keyword ETmodel: "PM"|"P" for selecting Penman-Monteith or Penman
+        method for reference evapotranspiration. Default is 'PM'.
+    :param force_reload: Ignore cache file and reload from the CSV file
+    """
+
+    # pylint: disable=R0913,C0103
+    def __init__(
+        self,
+        parcel,
+        dateformat="%d/%m/%Y",
+        possible_date_formats=None,
+    ):
+        WeatherDataProvider.__init__(self)
+        self.longitude = parcel.lon
+        self.latitude = parcel.lat
+        self.parcel_id = parcel.parcel_id
+        self.elevation = parcel.elevation
+        self.dateformat = dateformat
+        if possible_date_formats is None:
+            self.possible_date_formats = ["%d/%m/%Y", "%Y-%m-%d"]
+        self.nodata_value = -99
+        self.has_sunshine = False
+        self._create_header()
+
+        print("MesoclimWeatherDataProvider")
+
+        if not os.path.exists(self.fp_pq_fname):
+            msg = f"Cannot find weather file at: {self.fp_pq_fname}"
+            raise PCSEError(msg)
+        
+        self._read_observations(self.fp_pq_fname)
+
+    @property
+    def fp_pq_fname(self):
+        """Set path including name of weather file"""
+        return self._build_filename(self.parcel_id)
+
+    @staticmethod
+    def _build_filename(parcel_id):
+        """Build filename for weather data"""
+        # pylint: disable=E1101
+        filepath = app_config.data_dirs["downscaled_climate_pq_dir"]
+        filename = f"{filepath}{str(parcel_id)}.parquet"
+        # pylint: enable=E1101
+        return filename
+
+    @staticmethod
+    def _create_oscode(lon, lat):
+        """Create OS grid reference code for lon-lat pair"""
+        return lonlat2osgrid(coords=(lon, lat), figs=8)
+
+    def _create_header(self):
+        country = "Great Britain"
+        location = lonlat2osgrid((self.longitude, self.latitude), figs=8)
+        desc = (
+            f"Weather data from downscaled UKCP18 data for parcel "
+            f"'{self.parcel_id}' at location '{location}'"
+        )
+        src = "Environment and Sustainability Institute, University of Exeter"
+        contact = (
+            "Jonathan Mosedale: J.Mosedale@exeter.ac.uk \n"
+            "Ilya Maclean: i.m.d.maclean@exeter.ac.uk\n"
+        )
+        self.description = [
+            "Weather data for:",
+            f"Country: {country}",
+            f"Station: {self._create_oscode(self.longitude, self.latitude)}",
+            f"Description: {desc}",
+            f"Source: {src}",
+            f"Contact: {contact}",
+        ]
+
+    # pylint: disable=W4902, R0914, R0912
+    def _read_observations(self, pq_file):
+        """
+        Processes the rows with meteo data and converts into the correct units.
+        """
+        pq = pd.read_parquet(pq_file) # Read parquet file
+        records = pq.to_dict(orient="records")  # Convert to dictionary
+
+        for row in records:          
+            wdc = WeatherDataContainer(
+                        LAT=self.latitude,
+                        LON=self.longitude,
+                        ELEV=self.elevation,
+                        **row,
+                    )
+            self._store_WeatherDataContainer(wdc, row["DAY"])
 
 class Era5WeatherDataProvider(WeatherDataProvider):
     """

@@ -12,6 +12,8 @@ space
 import pandas as pd
 from pcse.base import ParameterProvider
 
+import time
+
 # from pcse.models import Wofost80_NWLP_FD_beta
 # from pcse.models import Wofost72_WLP_FD, LINGRA_WLP_FD
 from pcse.db.nasapower import NASAPowerWeatherDataProvider
@@ -26,6 +28,7 @@ from ukwofost.data_providers.weather_manager import (
     Era5WeatherDataProvider,
     NetCDFWeatherDataProvider,
     ParcelWeatherDataProvider,
+    MesoclimWeatherDataProvider,
 )
 
 
@@ -216,7 +219,12 @@ class WofostSimulator:
                     "Custom weather data can only be retrieved for parcels "
                     "and not for geographic coordinates"
                 )
-            wdp = ParcelWeatherDataProvider(parcel=self._parcel)
+            start_time = time.time()
+            wdp = MesoclimWeatherDataProvider(parcel=self._parcel)
+            end_time = time.time()    # End timer
+            elapsed = end_time - start_time
+            print(f"WDP completed in {elapsed:.2f} seconds.")
+
         elif self.weather_provider == "ERA5":
             wdp = Era5WeatherDataProvider(location=self._parcel)
         else:
