@@ -40,6 +40,7 @@ from ukwofost.core.utils import find_contiguous_sets, lonlat2osgrid
 
 logging.disable(logging.CRITICAL)
 
+
 def apply_conversion(df_row):
     """
     Function to convert yields in kg DM to kg at standard harvest moisture

@@ -16,8 +16,9 @@ crops and all parcels of the farm of interest for a number of years equal
 to the predefined length of the memory of the farmer of interest.
 """
 import numpy as np
-from tqdm import tqdm
 import xarray as xr
+from tqdm import tqdm
+
 from ukwofost.core.crop_manager import Crop
 from ukwofost.core.crops import Crops
 from ukwofost.core.defaults import defaults
@@ -57,6 +58,6 @@ if __name__ == "__main__":
     memory = get_wofost_yields(
         sim_start_time=START_YEAR,
         memory_length=YEARS_IN_MEMORY,
-        parcel_ids=parcels
+        parcel_ids=parcels,
     )
     memory.to_netcdf("memory.nc")

@@ -41,6 +41,7 @@ from ukwofost.core.utils import find_contiguous_sets
 
 logging.disable(logging.CRITICAL)
 
+
 def apply_conversion(df_row):
     """
     Function to convert yields in kg DM to kg at standard harvest moisture
@@ -76,9 +77,7 @@ def run_rotations(input_sample_df, output_filename):
             weather_provider="Mesoclim",
             soil_provider="SoilGrids",
         )
-        parcel_df = input_sample_df[
-            (input_sample_df["parcel_id"] == parcel)
-        ]
+        parcel_df = input_sample_df[(input_sample_df["parcel_id"] == parcel)]
 
         # Iterate over rotations
         for rotation in parcel_df["rotation"].unique():
