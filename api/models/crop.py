@@ -5,10 +5,12 @@
 """
 Models required for API endpoint to run WOFOST simulations.
 """
-from pydantic import BaseModel
+from typing import List
+
+from pydantic import BaseModel, ConfigDict
 
 
-class CropRequest(BaseModel):
+class SingleCrop(BaseModel):
     """
     CropRequest model for API endpoint to run WOFOST simulations.
     """
@@ -16,3 +18,22 @@ class CropRequest(BaseModel):
     crop: str
     year: int
     parcel_id: int
+
+
+class CropRunner(BaseModel):
+    """
+    CropRunner model for bulk WOFOST simulations.
+    """
+
+    parcel_id: int
+    crop: str
+    year: int
+    model_config = ConfigDict(extra="allow")
+
+
+class BulkRunner(BaseModel):
+    """
+    BulkRunner model for running multiple WOFOST simulations in bulk.
+    """
+
+    runs: List[CropRunner]
