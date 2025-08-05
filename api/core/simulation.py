@@ -17,7 +17,7 @@ from ukwofost.core.parcel import Parcel
 from ukwofost.core.simulation_manager import WofostSimulator
 
 
-def run_wofost_simulation(run):
+def run_wofost_simulation(run, summary):
     """Run an instance of a crop in WOFOST."""
     parcel = run.parcel_id
     try:
@@ -51,26 +51,35 @@ def run_wofost_simulation(run):
             crop_to_run = Crop(
                 crop_args.calendar_year, crop_args.crop, **crop_management
             )
-
-        crop_output = sim.run(
-            crop_or_rotation=crop_to_run,
-            output_flag="full",
-            **nonstandard_parameters,
-        ).reset_index(drop=False)
-
-        # crop_list = [list(d.keys())[0] for d in crop_rotation.crop_list]
-        # crop_indices = find_contiguous_sets(crop_output, "LAI")
-        # crop_column = [
-        #     crop_list[index - 1] if index > 0 else "fallow"
-        #     for index in crop_indices
-        # ]
-        crop_output["crop"] = crop_to_run.crop
-        crop_output["parcel_id"] = parcel
-        crop_output["year"] = crop_to_run.calendar_year
-        crop_output["variety"] = crop_to_run.variety
-        crop_output["yield"] = crop_output.apply(
-            apply_conversion, axis=1
-        )
+        if summary:
+            crop_yield = sim.run(
+                crop_or_rotation=crop_to_run,
+                output_flag="summary",
+                **nonstandard_parameters,
+            )
+            crop_output = pd.DataFrame(
+                [
+                    {
+                        "parcel_id": parcel,
+                        "crop": crop_to_run.crop,
+                        "year": crop_to_run.calendar_year,
+                        "variety": crop_to_run.variety,
+                        "TWSO": crop_yield,
+                    }
+                ]
+            )
+            crop_output["yield"] = crop_output.apply(apply_conversion, axis=1)
+        else:
+            crop_output = sim.run(
+                crop_or_rotation=crop_to_run,
+                output_flag="full",
+                **nonstandard_parameters,
+            ).reset_index(drop=False)
+            crop_output["crop"] = crop_to_run.crop
+            crop_output["parcel_id"] = parcel
+            crop_output["year"] = crop_to_run.calendar_year
+            crop_output["variety"] = crop_to_run.variety
+            crop_output["yield"] = crop_output.apply(apply_conversion, axis=1)
 
         return crop_output
 

@@ -13,8 +13,8 @@ import numpy as np
 import requests
 
 df = pd.read_csv(
-    "C:/Users/mcm216/OneDrive - University of Exeter/",
-    "Desktop/WofostSimulator/wofost-new-rotation_1.csv",
+    "C:/Users/mcm216/OneDrive - University of Exeter/"
+    + "Desktop/WofostSimulator/wofost-new-rotation_1.csv",
 )
 df = df.replace({np.nan: None, np.inf: None, -np.inf: None})
 
@@ -22,9 +22,10 @@ df = df.replace({np.nan: None, np.inf: None, -np.inf: None})
 # Convert the DataFrame to the expected JSON format
 payload = {"runs": df.to_dict(orient="records")}
 
+summary_flag = True
 # URL of your local FastAPI endpoint
-url = "http://127.0.0.1:8000/run_bulk"
+URL = f"http://127.0.0.1:8000/run_bulk?summary={str(summary_flag).lower()}"
 
 # Send the POST request
-response = requests.post(url, json=payload)
+response = requests.post(URL, json=payload, timeout=60)
 df = pd.DataFrame(response.json()["result"])

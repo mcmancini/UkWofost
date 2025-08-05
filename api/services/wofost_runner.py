@@ -47,6 +47,7 @@ def run_from_payload(
     runs: List[Union[dict, BaseModel]],
     parallel: bool = True,
     max_workers: int = os.cpu_count() - 1,
+    summary: bool = False,
 ) -> list:
     """
     Runs crop rotations simulations based on a list of parameter dicts.
@@ -69,7 +70,7 @@ def run_from_payload(
     if parallel:
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
             futures = {
-                executor.submit(run_wofost_simulation, run): run_id
+                executor.submit(run_wofost_simulation, run, summary): run_id
                 for run_id, run in indexed_runs
             }
             for future in as_completed(futures):
@@ -80,7 +81,7 @@ def run_from_payload(
                     all_results.append(df_result)
     else:
         for run_id, run in indexed_runs:
-            df_result = run_wofost_simulation(run)
+            df_result = run_wofost_simulation(run, summary)
             if not df_result.empty:
                 df_result["run_id"] = run_id
                 all_results.append(df_result)
