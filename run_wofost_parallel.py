@@ -24,8 +24,9 @@ values before passing the crop_params dictionary when the instance
 of the Crop class is instantiated (line 45). More information on
 agromanagment can be found at https://tinyurl.com/bdcmj5b7
 """
-import multiprocessing
 import logging
+import multiprocessing
+
 from ukwofost.core.crop_manager import Crop
 from ukwofost.core.defaults import defaults
 from ukwofost.core.parcel import Parcel
@@ -41,6 +42,7 @@ PARCEL_ID = 578422
 # Create reusable data
 crop_management = defaults.get("management").get(CROP)
 
+
 # Function to run one simulation
 def run_single_simulation(sim_index):
     """wrapper function to run a single wofost simulation"""
@@ -52,6 +54,7 @@ def run_single_simulation(sim_index):
     result = sim.run(crop_or_rotation=crop, output_flag="summary")
     print(f"Simulation {sim_index} completed.")
     return result
+
 
 if __name__ == "__main__":
     NUM_SIMULATIONS = 10

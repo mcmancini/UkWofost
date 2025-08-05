@@ -3,7 +3,7 @@
 # Mattia Mancini (m.c.mancini@exeter.ac.uk), July 2025
 # ====================================================
 """
-enpoints.py
+endpoints.py
 ===========
 This module defines the API endpoints for running crop simulations using
 the WOFOST model.
@@ -11,19 +11,27 @@ the WOFOST model.
 
 from fastapi import APIRouter, HTTPException
 
-from api.models.crop import CropRequest
-from api.services.wofost_runner import run_crop_simulation
+from api.models.crop import BulkRunner, SingleCrop
+from api.services.wofost_runner import run_from_payload, run_single_crop
 
 router = APIRouter()
 
 
 @router.post("/run_crop")
-def run_crop(request: CropRequest):
+def run_crop(request: SingleCrop):
     """Run a WOFOST simulation for a crop in a specific year and parcel."""
     try:
-        result = run_crop_simulation(
-            request.crop, request.year, request.parcel_id
-        )
+        result = run_single_crop(request.crop, request.year, request.parcel_id)
+        return {"result": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@router.post("/run_bulk")
+async def run_bulk(request: BulkRunner, summary: bool = False):
+    """Run bulk WOFOST simulations."""
+    try:
+        result = run_from_payload(request.runs, summary=summary)
         return {"result": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
