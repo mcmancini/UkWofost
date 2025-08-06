@@ -28,7 +28,15 @@ def run_wofost_simulation(run, summary):
             soil_provider="SoilGrids",
         )
 
-        parameter_dict = run.model_dump()
+        try:
+            parameter_dict = run.model_dump()
+        except AttributeError:
+            # fallback for pydantic v1 or non-pydantic objects
+            try:
+                parameter_dict = run.dict()
+            except AttributeError:
+                # last resort: try to coerce dataclass or simple object via vars()
+                parameter_dict = dict(vars(run))
 
         nonstandard_parameters = {
             key: value
