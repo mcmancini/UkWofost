@@ -130,10 +130,10 @@ class Crop:
                 args["crop_start_month"],
                 args["crop_start_day"],
             )
-            args["start_crop_calendar"] = crop_start_date
             args["crop_start_date"] = crop_start_date
-        else:
-            crop_start_date = args["crop_start_date"]
+        crop_start_date = args["crop_start_date"]
+
+        if "start_crop_calendar" not in args:
             args["start_crop_calendar"] = crop_start_date
 
         event_types = {
@@ -228,20 +228,26 @@ class Crop:
         """
         if "winter" in variety.lower():
             if "date" not in event:
-                timing = dt.date(
-                    crop_start_date.year + 1, event["month"], event["day"]
-                )
+                if "year" not in event:
+                    timing = dt.date(
+                        crop_start_date.year + 1, event["month"], event["day"]
+                    )
+                else:
+                    timing = dt.date(
+                        event["year"], event["month"], event["day"]
+                    )
             else:
                 timing = event["date"]
         else:
             if "date" not in event:
-                timing = dt.date(
-                    crop_start_date.year, event["month"], event["day"]
-                )
-                if timing < crop_start_date:
-                    # this deals with a crop calendar year starting in the
-                    # fall and timing events in the following year
-                    timing = timing.replace(year=timing.year + 1)
+                if "year" not in event:
+                    timing = dt.date(
+                        crop_start_date.year, event["month"], event["day"]
+                    )
+                else:
+                    timing = dt.date(
+                        event["year"], event["month"], event["day"]
+                    )
             else:
                 timing = event["date"]
         return timing
@@ -412,6 +418,7 @@ class CropBuilder:
     crop_parameters = set(
         [
             "variety",
+            "start_crop_calendar",
             "crop_start_date",
             "crop_end_type",
             "max_duration",
@@ -445,7 +452,10 @@ class CropBuilder:
         crop_params = self.default_values.copy()
         for param in self.crop_parameters:
             if param in sample.index and pd.notna(sample[param]):
-                if param == "crop_start_date":
+                if (
+                    param == "crop_start_date"
+                    or param == "start_crop_calendar"
+                ):
                     datetime_obj = pd.to_datetime(sample[param], dayfirst=True)
                     crop_params[param] = datetime_obj.date()
                 else:
@@ -473,6 +483,9 @@ class CropBuilder:
                     and pd.notna(sample[f"NPK_T{i}"])
                 ):
                     npk_i = {
+                        "year": pd.to_datetime(
+                            sample[f"NPK_T{i}"], format="%d/%m/%Y"
+                        ).year,
                         "month": pd.to_datetime(
                             sample[f"NPK_T{i}"], format="%d/%m/%Y"
                         ).month,
