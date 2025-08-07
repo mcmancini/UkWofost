@@ -28,6 +28,7 @@ class CropRunner(BaseModel):
     parcel_id: int
     crop: str
     year: int
+    variety: str
     model_config = ConfigDict(extra="allow")
 
 
