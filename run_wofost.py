@@ -39,7 +39,7 @@ logging.disable(logging.CRITICAL)
 # LON, LAT = -1.670330465465696, 55.028574354445425
 CROP = "winter_wheat"
 YEAR = 2019
-PARCEL_ID = 578422
+PARCEL_ID = 1764640
 parcel = Parcel(PARCEL_ID)
 # Build Wofost simulator
 # os_code = lonlat2osgrid((LON, LAT), 10)
@@ -49,7 +49,8 @@ sim = WofostSimulator(
 
 crop_management = defaults.get("management").get(CROP)
 crop = Crop(calendar_year=YEAR, crop=CROP, **crop_management)
-crop_output = sim.run(crop_or_rotation=crop, output_flag="summary")
+crop_output = sim.run(crop_or_rotation=crop, output_flag="full")
+print(crop_output)
 # # Define management
 # rotation = []
 # for item in zip(CROPS, YEARS):

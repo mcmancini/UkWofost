@@ -12,6 +12,10 @@ import datetime as dt
 import math
 import os
 
+import time
+import pyarrow.parquet as pqs
+
+
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -769,9 +773,20 @@ class MesoclimWeatherDataProvider(WeatherDataProvider):
         """
         Processes the rows with meteo data and converts into the correct units.
         """
-        pq = pd.read_parquet(pq_file) # Read parquet file
-        records = pq.to_dict(orient="records")  # Convert to dictionary
+        #start_time = time.time()
+        #pq = pd.read_parquet(pq_file) # Read parquet file
+        #records = pq.to_dict(orient="records")  # Convert to dictionary    
+        #end_time = time.time()    # End timer
+        #elapsed = end_time - start_time
+        #print(f"Parquet method 1 completed in {elapsed:.2f} seconds.")
 
+        start_time2 = time.time()
+        table = pqs.read_table(pq_file)
+        records = table.to_pylist()
+        end_time2 = time.time()    # End timer
+        elapsed2 = end_time2 - start_time2
+        print(f"Parquet method 2 completed in {elapsed2:.2f} seconds.")
+        
         for row in records:          
             wdc = WeatherDataContainer(
                         LAT=self.latitude,
