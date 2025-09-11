@@ -17,7 +17,7 @@ from ukwofost.core.parcel import Parcel
 from ukwofost.core.simulation_manager import WofostSimulator
 
 
-def run_wofost_simulation(run, summary):
+def run_wofost_simulation(run, output_mode: str):
     """Run an instance of a crop in WOFOST."""
     parcel = run.parcel_id
     try:
@@ -59,7 +59,7 @@ def run_wofost_simulation(run, summary):
             crop_to_run = Crop(
                 crop_args.calendar_year, crop_args.crop, **crop_management
             )
-        if summary:
+        if output_mode == "summary":
             crop_yield = sim.run(
                 crop_or_rotation=crop_to_run,
                 output_flag="summary",
@@ -88,6 +88,9 @@ def run_wofost_simulation(run, summary):
             crop_output["year"] = crop_to_run.calendar_year
             crop_output["variety"] = crop_to_run.variety
             crop_output["yield"] = crop_output.apply(apply_conversion, axis=1)
+            if output_mode == "harvest":
+                max_idx = crop_output["yield"].idxmax()
+                crop_output = crop_output.loc[[max_idx]]
 
         return crop_output
 

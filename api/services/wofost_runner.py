@@ -47,7 +47,7 @@ def run_from_payload(
     runs: List[Union[dict, BaseModel]],
     parallel: bool = True,
     max_workers: int = os.cpu_count() - 1,
-    summary: bool = False,
+    summary: str = "harvest",
 ) -> list:
     """
     Runs crop rotations simulations based on a list of parameter dicts.

@@ -28,7 +28,7 @@ def run_crop(request: SingleCrop):
 
 
 @router.post("/run_bulk")
-async def run_bulk(request: BulkRunner, summary: bool = False):
+async def run_bulk(request: BulkRunner, summary: str = "harvest"):
     """Run bulk WOFOST simulations."""
     try:
         result = run_from_payload(request.runs, summary=summary)
