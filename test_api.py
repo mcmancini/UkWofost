@@ -22,7 +22,7 @@ df = df.replace({np.nan: None, np.inf: None, -np.inf: None})
 # Convert the DataFrame to the expected JSON format
 payload = {"runs": df.to_dict(orient="records")}
 
-SUMMARY_FLAG = "harvest" # can be "full", "summary" or "harvest"
+SUMMARY_FLAG = "harvest"  # can be "full", "summary" or "harvest"
 # URL of your local FastAPI endpoint
 # URL = f"http://mmlin.ex.ac.uk:8000/run_bulk?summary={str(SUMMARY_FLAG).lower()}"
 URL = f"http://localhost:8000/run_bulk?summary={str(SUMMARY_FLAG).lower()}"

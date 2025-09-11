@@ -35,5 +35,3 @@ async def run_bulk(request: BulkRunner, summary: str = "harvest"):
         return {"result": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
-    
-

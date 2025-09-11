@@ -769,9 +769,7 @@ def get_dtm_values(parcel_os_code, app_config):
         db_password = os.path.expandvars(
             app_config.dem_parameters.get("password", "")
         )
-        db_host = os.path.expandvars(
-            app_config.dem_parameters.get("host", "")
-        )
+        db_host = os.path.expandvars(app_config.dem_parameters.get("host", ""))
         db_password = None if not db_password else db_password
         conn = psycopg2.connect(
             user=db_user,

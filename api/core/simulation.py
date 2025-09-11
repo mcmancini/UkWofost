@@ -17,7 +17,7 @@ from ukwofost.core.parcel import Parcel
 from ukwofost.core.simulation_manager import WofostSimulator
 
 
-def run_wofost_simulation(run, output_mode:str):
+def run_wofost_simulation(run, output_mode: str):
     """Run an instance of a crop in WOFOST."""
     parcel = run.parcel_id
     try:
@@ -91,7 +91,6 @@ def run_wofost_simulation(run, output_mode:str):
             if output_mode == "harvest":
                 max_idx = crop_output["yield"].idxmax()
                 crop_output = crop_output.loc[[max_idx]]
-
 
         return crop_output
 
