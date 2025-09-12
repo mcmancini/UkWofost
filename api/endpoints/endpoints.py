@@ -10,6 +10,7 @@ the WOFOST model.
 """
 
 from fastapi import APIRouter, HTTPException
+from typing import Literal
 
 from api.models.crop import BulkRunner, SingleCrop
 from api.services.wofost_runner import run_from_payload, run_single_crop
@@ -28,7 +29,9 @@ def run_crop(request: SingleCrop):
 
 
 @router.post("/run_bulk")
-async def run_bulk(request: BulkRunner, summary: str = "harvest"):
+async def run_bulk(
+    request: BulkRunner, summary: Literal["harvest", "full", "summary"]
+):
     """Run bulk WOFOST simulations."""
     try:
         result = run_from_payload(request.runs, summary=summary)

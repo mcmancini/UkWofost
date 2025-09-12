@@ -9,7 +9,7 @@ wofost_runner.py
 import logging
 import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from typing import List, Union
+from typing import List, Union, Literal
 
 import numpy as np
 import pandas as pd
@@ -45,9 +45,9 @@ def run_single_crop(crop: str, year: int, parcel_id: int):
 
 def run_from_payload(
     runs: List[Union[dict, BaseModel]],
+    summary: Literal["harvest", "full", "summary"],
     parallel: bool = True,
     max_workers: int = os.cpu_count() - 1,
-    summary: str = "harvest",
 ) -> list:
     """
     Runs crop rotations simulations based on a list of parameter dicts.
