@@ -24,8 +24,8 @@ payload = {"runs": df.to_dict(orient="records")}
 
 SUMMARY_FLAG = "harvest"  # can be "full", "summary" or "harvest"
 # URL of your local FastAPI endpoint
-# URL = f"http://mmlin.ex.ac.uk:8000/run_bulk?summary={str(SUMMARY_FLAG).lower()}"
-URL = f"http://localhost:8000/run_bulk?summary={str(SUMMARY_FLAG).lower()}"
+# URL = f"http://mmlin.ex.ac.uk:8000/run_bulk?summary={SUMMARY_FLAG}"
+URL = f"http://localhost:8000/run_bulk?summary={SUMMARY_FLAG}"
 
 # Send the POST request
 response = requests.post(URL, json=payload, timeout=60)

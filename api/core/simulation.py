@@ -9,6 +9,7 @@ Module for core business logic of running individual WOFOST simulations
 """
 
 import pandas as pd
+from typing import Literal
 
 from api.utils.utils import apply_conversion
 from ukwofost.core.crop_manager import Crop, CropBuilder
@@ -17,7 +18,10 @@ from ukwofost.core.parcel import Parcel
 from ukwofost.core.simulation_manager import WofostSimulator
 
 
-def run_wofost_simulation(run, output_mode: str):
+def run_wofost_simulation(
+    run,
+    output_mode: Literal["harvest", "full", "summary"],
+):
     """Run an instance of a crop in WOFOST."""
     parcel = run.parcel_id
     try:
@@ -35,7 +39,7 @@ def run_wofost_simulation(run, output_mode: str):
             try:
                 parameter_dict = run.dict()
             except AttributeError:
-                # last resort: try to coerce dataclass or simple object via vars()
+                # last resort: try to coerce dataclass or object via vars()
                 parameter_dict = dict(vars(run))
 
         nonstandard_parameters = {
