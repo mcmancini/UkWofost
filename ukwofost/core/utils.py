@@ -104,7 +104,6 @@ import json
 import math
 import os
 import re
-import urllib
 from datetime import date, datetime, time, timedelta
 from math import acos, asin, cos
 from math import degrees as deg
@@ -117,7 +116,9 @@ import numpy as np
 import pandas as pd
 import psycopg2
 from pyproj import Transformer
-from sqlalchemy import create_engine
+from sqlalchemy import text
+
+from ukwofost.core import engine
 
 
 class BNGError(Exception):
@@ -749,7 +750,7 @@ def int_to_date(int_to_convert, reference=None):
     return date_obj
 
 
-def get_dtm_values(parcel_os_code, app_config):
+def get_dtm_values(parcel_os_code):
     """
     Query the DTM database based on longitude and latitude to retrieve
     elevation, slope and aspect data.
@@ -762,31 +763,9 @@ def get_dtm_values(parcel_os_code, app_config):
     # find the closest 50m grid cell in the DEM
     lon, lat = osgrid2lonlat(parcel_os_code)
     lon_min, lon_max, lat_min, lat_max = lon - 50, lon + 50, lat - 50, lat + 50
-    conn = None
     try:
-        db_name = os.path.expandvars(
-            app_config.db_parameters.get("db_name", "")
-        )
-        db_name = None if not db_name else db_name
-        db_user = os.path.expandvars(
-            app_config.db_parameters.get("username", "")
-        )
-        db_user = None if not db_user else db_user
-        db_password = os.path.expandvars(
-            app_config.db_parameters.get("password", "")
-        )
-        db_host = os.path.expandvars(app_config.db_parameters.get("host", ""))
-        db_password = None if not db_password else db_password
-        conn = psycopg2.connect(
-            user=db_user,
-            password=db_password,
-            database=db_name,
-            host=db_host,
-            port="5432",
-        )
-        conn.autocommit = True
-        cur = conn.cursor()
-        sql = f"""
+        sql = text(
+            """
             SELECT
                 terrain.x,
                 terrain.y,
@@ -794,11 +773,22 @@ def get_dtm_values(parcel_os_code, app_config):
                 terrain.slope,
                 terrain.aspect
             FROM dtm.dtm_slope_aspect AS terrain
-            WHERE terrain.x BETWEEN {lon_min} AND {lon_max}
-            AND terrain.y BETWEEN {lat_min} AND {lat_max};
+            WHERE terrain.x BETWEEN :lon_min AND :lon_max
+            AND terrain.y BETWEEN :lat_min AND :lat_max;
         """
-        cur.execute(sql)
-        sql_return = cur.fetchall()
+        )
+        with engine.connect() as connection:
+            sql_return = connection.execute(
+                sql,
+                {
+                    "lon_min": lon_min,
+                    "lon_max": lon_max,
+                    "lat_min": lat_min,
+                    "lat_max": lat_max,
+                },
+            ).fetchall()
+        if not sql_return:
+            return {"x": 0, "y": 0, "elevation": 0, "slope": 0, "aspect": 0}
         lon_lst = [x[0] for x in sql_return]
         lat_lst = [x[1] for x in sql_return]
         closest_lon, closest_lat = nearest(lon, lon_lst), nearest(lat, lat_lst)
@@ -812,21 +802,10 @@ def get_dtm_values(parcel_os_code, app_config):
         dtm_dict = dtm_dict = dict(zip(dict_keys, dtm_vals))
         return dtm_dict
 
-    except psycopg2.OperationalError as error:
-        print(
-            f"WARNING: Database connection failed: {error}"
-            f" - returning default values."
-        )
-        return {"x": 0, "y": 0, "elevation": 0, "slope": 0, "aspect": 0}
-
-    # pylint: disable=W0718
     except Exception as error:
         print(f"An unexpected error occurred: {error}")
         return {"x": 0, "y": 0, "elevation": 0, "slope": 0, "aspect": 0}
     # pylint: enable=W0718
-    finally:
-        if conn is not None:
-            conn.close()
 
 
 def find_contiguous_sets(data_frame, col_name):
@@ -1009,7 +988,7 @@ def estimate_angstrom(toa=None, toc=None):
     return angstrom_a, angstrom_b
 
 
-def load_parcel_from_db(parcel_gid, app_config):
+def load_parcel_from_db(parcel_gid):
     """
     Query a parcel database to retrieve parcel data
 
@@ -1024,28 +1003,7 @@ def load_parcel_from_db(parcel_gid, app_config):
     """
 
     # pylint: disable=W0718
-    conn = None
     try:
-        db_name = os.path.expandvars(
-            app_config.db_parameters.get("db_name", "")
-        )
-        db_name = None if not db_name else db_name
-        db_user = os.path.expandvars(
-            app_config.db_parameters.get("username", "")
-        )
-        db_user = None if not db_user else db_user
-        db_password = os.path.expandvars(
-            app_config.db_parameters.get("password", "")
-        )
-        db_host = os.path.expandvars(app_config.db_parameters.get("host", ""))
-        db_password = (
-            None if not db_password else urllib.parse.quote_plus(db_password)
-        )
-        conn = (
-            "postgresql+psycopg2://"
-            f"{db_user}:{db_password}@{db_host}:5432/{db_name}"
-        )
-        engine = create_engine(conn)
         sql = f"""
             SELECT * FROM parcels.parcels WHERE gid = '{parcel_gid}';
         """
