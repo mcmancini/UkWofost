@@ -1,8 +1,8 @@
-[dem_parameters]
-db_name = terrain_50
-host = localhost
-username = ${SQL_user}
-password = ${SQL_pwd}
+[dbm_parameters]
+db_name = england_landcover
+host = database_host
+username = username
+password = password
 port = 5432
 
 [data_dirs]
