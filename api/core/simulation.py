@@ -8,8 +8,9 @@ simulation.py
 Module for core business logic of running individual WOFOST simulations
 """
 
-import pandas as pd
 from typing import Literal
+
+import pandas as pd
 
 from api.utils.utils import apply_conversion
 from ukwofost.core.crop_manager import Crop, CropBuilder

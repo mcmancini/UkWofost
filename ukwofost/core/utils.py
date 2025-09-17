@@ -95,12 +95,16 @@ estimate_angstrom(toa=None, toc=None):
     Determine Angstrom A/B parameters from Top-of-Atmosphere and
     top-of-Canopy radiation values if present.
 
+load_parcel_from_db(parcel_gid, app_config):
+    Query a parcel database to retrieve parcel data
+
 """
 
 import json
 import math
 import os
 import re
+import urllib
 from datetime import date, datetime, time, timedelta
 from math import acos, asin, cos
 from math import degrees as deg
@@ -108,10 +112,12 @@ from math import exp, floor, log
 from math import radians as rad
 from math import sin, tan
 
+import geopandas as gpd
 import numpy as np
 import pandas as pd
 import psycopg2
 from pyproj import Transformer
+from sqlalchemy import create_engine
 
 
 class BNGError(Exception):
@@ -759,17 +765,17 @@ def get_dtm_values(parcel_os_code, app_config):
     conn = None
     try:
         db_name = os.path.expandvars(
-            app_config.dem_parameters.get("db_name", "")
+            app_config.db_parameters.get("db_name", "")
         )
         db_name = None if not db_name else db_name
         db_user = os.path.expandvars(
-            app_config.dem_parameters.get("username", "")
+            app_config.db_parameters.get("username", "")
         )
         db_user = None if not db_user else db_user
         db_password = os.path.expandvars(
-            app_config.dem_parameters.get("password", "")
+            app_config.db_parameters.get("password", "")
         )
-        db_host = os.path.expandvars(app_config.dem_parameters.get("host", ""))
+        db_host = os.path.expandvars(app_config.db_parameters.get("host", ""))
         db_password = None if not db_password else db_password
         conn = psycopg2.connect(
             user=db_user,
@@ -1001,3 +1007,58 @@ def estimate_angstrom(toa=None, toc=None):
         )
         msg = msg % (angstrom_a, angstrom_b, e)
     return angstrom_a, angstrom_b
+
+
+def load_parcel_from_db(parcel_gid, app_config):
+    """
+    Query a parcel database to retrieve parcel data
+
+    Parameters
+    ----------
+    :param parcel_gid: The ID of the parcel to retrieve
+    :param app_config: The application configuration object
+
+    Return
+    ------
+    :return: GeoDataFrame containing the parcel data
+    """
+
+    # pylint: disable=W0718
+    conn = None
+    try:
+        db_name = os.path.expandvars(
+            app_config.db_parameters.get("db_name", "")
+        )
+        db_name = None if not db_name else db_name
+        db_user = os.path.expandvars(
+            app_config.db_parameters.get("username", "")
+        )
+        db_user = None if not db_user else db_user
+        db_password = os.path.expandvars(
+            app_config.db_parameters.get("password", "")
+        )
+        db_host = os.path.expandvars(app_config.db_parameters.get("host", ""))
+        db_password = (
+            None if not db_password else urllib.parse.quote_plus(db_password)
+        )
+        conn = (
+            "postgresql+psycopg2://"
+            f"{db_user}:{db_password}@{db_host}:5432/{db_name}"
+        )
+        engine = create_engine(conn)
+        sql = f"""
+            SELECT * FROM parcels.parcels WHERE gid = '{parcel_gid}';
+        """
+        with engine.connect() as connection:
+            sql_return = gpd.read_postgis(sql, connection, geom_col="geom")
+        # cur.execute(sql)
+        # sql_return = cur.fetchall()
+        # if len(sql_return) == 0:
+        #     raise ValueError(f"Parcel with gid {parcel_gid} not found in DB")
+        parcel_data = sql_return
+        return parcel_data
+    except psycopg2.OperationalError as error:
+        print(f"WARNING: Database connection failed: {error}")
+    except Exception as error:
+        print(f"An unexpected error occurred: {error}")
+    # pylint: enable=W0718

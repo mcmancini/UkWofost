@@ -13,10 +13,12 @@ WofostSimulator objects.
 import os
 import warnings
 
-import geopandas as gpd
-
 from ukwofost.core import app_config
-from ukwofost.core.utils import get_dtm_values, lonlat2osgrid
+from ukwofost.core.utils import (
+    get_dtm_values,
+    load_parcel_from_db,
+    lonlat2osgrid,
+)
 
 
 class Parcel:
@@ -98,10 +100,12 @@ class Parcel:
         Compute OS grid code of the centroid
         of the parcel with id = "parcel_id"
         """
-        parcels_shapefile = gpd.read_file(self._PARCEL_DATA)
+        parcels_shapefile = load_parcel_from_db(self.parcel_id, app_config)
+        parcels_shapefile = parcels_shapefile.to_crs(epsg=4326)
         parcel_centroid = parcels_shapefile[
             parcels_shapefile["gid"] == str(self.parcel_id)
         ].centroid
+        parcel_centroid = parcel_centroid.to_crs("EPSG:4326")
         lon, lat = (parcel_centroid.iloc[0].x, parcel_centroid.iloc[0].y)
         osgrid_code = lonlat2osgrid(coords=(lon, lat), figs=8)
         return {
