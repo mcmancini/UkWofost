@@ -87,7 +87,7 @@ class Parcel:
     def _calc_elevation(os_code):
         """Retrieve elevation of the centroid of the parcel"""
         try:
-            dtm_data = get_dtm_values(os_code, app_config)["elevation"]
+            dtm_data = get_dtm_values(os_code)["elevation"]
         except Exception as e:
             print(f"Error retrieving elevation for OS code {os_code}: {e}")
             dtm_data = 0.0
@@ -100,7 +100,7 @@ class Parcel:
         Compute OS grid code of the centroid
         of the parcel with id = "parcel_id"
         """
-        parcels_shapefile = load_parcel_from_db(self.parcel_id, app_config)
+        parcels_shapefile = load_parcel_from_db(self.parcel_id)
         parcels_shapefile = parcels_shapefile.to_crs(epsg=4326)
         parcel_centroid = parcels_shapefile[
             parcels_shapefile["gid"] == str(self.parcel_id)
