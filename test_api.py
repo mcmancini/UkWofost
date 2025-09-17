@@ -8,8 +8,8 @@ test_api.py
 This module contains tests for the API endpoints related to WOFOST simulations.
 """
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 import requests
 
 df = pd.read_csv(

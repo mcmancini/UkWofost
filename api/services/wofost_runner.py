@@ -9,7 +9,7 @@ wofost_runner.py
 import logging
 import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from typing import List, Union, Literal
+from typing import List, Literal, Union
 
 import numpy as np
 import pandas as pd

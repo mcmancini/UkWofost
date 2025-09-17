@@ -9,8 +9,9 @@ This module defines the API endpoints for running crop simulations using
 the WOFOST model.
 """
 
-from fastapi import APIRouter, HTTPException
 from typing import Literal
+
+from fastapi import APIRouter, HTTPException
 
 from api.models.crop import BulkRunner, SingleCrop
 from api.services.wofost_runner import run_from_payload, run_single_crop
