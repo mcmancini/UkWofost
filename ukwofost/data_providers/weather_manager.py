@@ -830,9 +830,7 @@ class Era5WeatherDataProvider(WeatherDataProvider):
             elevation = location.elevation
         elif isinstance(location, str):
             try:
-                elevation = round(
-                    get_dtm_values(location)["elevation"]
-                )
+                elevation = round(get_dtm_values(location)["elevation"])
             except ConnectionError:
                 elevation = 0
             return elevation
