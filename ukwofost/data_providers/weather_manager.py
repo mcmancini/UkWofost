@@ -145,7 +145,7 @@ class NetCDFWeatherDataProvider(WeatherDataProvider):
             self.osgrid_1km, epsg=4326
         )
 
-        self.elevation = get_dtm_values(osgrid_code, app_config)["elevation"]
+        self.elevation = get_dtm_values(osgrid_code)["elevation"]
         # pylint: enable=E1101
 
         # Retrieve Angstrom coefficients A and B
@@ -830,9 +830,7 @@ class Era5WeatherDataProvider(WeatherDataProvider):
             elevation = location.elevation
         elif isinstance(location, str):
             try:
-                elevation = round(
-                    get_dtm_values(location, app_config)["elevation"]
-                )
+                elevation = round(get_dtm_values(location)["elevation"])
             except ConnectionError:
                 elevation = 0
             return elevation
