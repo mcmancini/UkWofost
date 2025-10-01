@@ -20,13 +20,12 @@ from ukwofost.core.simulation_manager import WofostSimulator
 
 
 def run_wofost_simulation(
-    run,
-    output_mode: Literal["harvest", "full", "summary"],
+    run, output_mode: Literal["harvest", "full", "summary"], db=None
 ):
     """Run an instance of a crop in WOFOST."""
     parcel = run.parcel_id
     try:
-        parcel_obj = Parcel(parcel)
+        parcel_obj = Parcel(parcel, db=db)
         sim = WofostSimulator(
             location=parcel_obj,
             weather_provider="Mesoclim",

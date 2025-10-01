@@ -13,9 +13,6 @@ parcel ID. The API will return the simulated yield for the specified input.
 from fastapi import FastAPI
 
 from api.endpoints import endpoints
-from ukwofost.core import engine
 
 app = FastAPI()
 app.include_router(endpoints.router)
-
-_ = engine

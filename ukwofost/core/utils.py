@@ -118,7 +118,7 @@ import psycopg2
 from pyproj import Transformer
 from sqlalchemy import text
 
-from ukwofost.core import engine
+from ukwofost.utility.db import SessionLocal
 
 
 class BNGError(Exception):
@@ -750,7 +750,7 @@ def int_to_date(int_to_convert, reference=None):
     return date_obj
 
 
-def get_dtm_values(parcel_os_code):
+def get_dtm_values(parcel_os_code, db=None):
     """
     Query the DTM database based on longitude and latitude to retrieve
     elevation, slope and aspect data.
@@ -763,6 +763,11 @@ def get_dtm_values(parcel_os_code):
     # find the closest 50m grid cell in the DEM
     lon, lat = osgrid2lonlat(parcel_os_code)
     lon_min, lon_max, lat_min, lat_max = lon - 50, lon + 50, lat - 50, lat + 50
+    if db is None:
+        db = SessionLocal()  # standalone usage
+        created_here = True
+    else:
+        created_here = False
     try:
         sql = text(
             """
@@ -777,16 +782,16 @@ def get_dtm_values(parcel_os_code):
             AND terrain.y BETWEEN :lat_min AND :lat_max;
         """
         )
-        with engine.connect() as connection:
-            sql_return = connection.execute(
-                sql,
-                {
-                    "lon_min": lon_min,
-                    "lon_max": lon_max,
-                    "lat_min": lat_min,
-                    "lat_max": lat_max,
-                },
-            ).fetchall()
+        conn = db.connection()
+        sql_return = conn.execute(
+            sql,
+            {
+                "lon_min": lon_min,
+                "lon_max": lon_max,
+                "lat_min": lat_min,
+                "lat_max": lat_max,
+            },
+        ).fetchall()
         if not sql_return:
             return {"x": 0, "y": 0, "elevation": 0, "slope": 0, "aspect": 0}
         lon_lst = [x[0] for x in sql_return]
@@ -805,6 +810,10 @@ def get_dtm_values(parcel_os_code):
     except Exception as error:
         print(f"An unexpected error occurred: {error}")
         return {"x": 0, "y": 0, "elevation": 0, "slope": 0, "aspect": 0}
+
+    finally:
+        if created_here:
+            db.close()
     # pylint: enable=W0718
 
 
@@ -988,7 +997,7 @@ def estimate_angstrom(toa=None, toc=None):
     return angstrom_a, angstrom_b
 
 
-def load_parcel_from_db(parcel_gid):
+def load_parcel_from_db(parcel_gid, db=None):
     """
     Query a parcel database to retrieve parcel data
 
@@ -1001,14 +1010,19 @@ def load_parcel_from_db(parcel_gid):
     ------
     :return: GeoDataFrame containing the parcel data
     """
-
     # pylint: disable=W0718
+    if db is None:
+        db = SessionLocal()  # standalone usage
+        created_here = True
+    else:
+        created_here = False
     try:
+
         sql = f"""
             SELECT * FROM parcels.parcels WHERE gid = '{parcel_gid}';
         """
-        with engine.connect() as connection:
-            sql_return = gpd.read_postgis(sql, connection, geom_col="geom")
+        conn = db.connection()
+        sql_return = gpd.read_postgis(sql, conn, geom_col="geom")
         # cur.execute(sql)
         # sql_return = cur.fetchall()
         # if len(sql_return) == 0:
@@ -1019,4 +1033,10 @@ def load_parcel_from_db(parcel_gid):
         print(f"WARNING: Database connection failed: {error}")
     except Exception as error:
         print(f"An unexpected error occurred: {error}")
+    finally:
+        if created_here:
+            db.close()
     # pylint: enable=W0718
+
+
+# pylint: enable=R1710

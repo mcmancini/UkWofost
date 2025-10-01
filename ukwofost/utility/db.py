@@ -11,6 +11,9 @@ import os
 import urllib
 
 from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+
+from ukwofost.core import app_config
 
 
 def create_db_connection(app_config):
@@ -40,3 +43,12 @@ def create_db_connection(app_config):
         pool_recycle=1800,  # refresh connections periodically
     )
     return engine
+
+
+SessionLocal = scoped_session(
+    sessionmaker(
+        autocommit=False,
+        autoflush=False,
+        bind=create_db_connection(app_config),
+    )
+)
