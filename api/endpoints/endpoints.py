@@ -11,19 +11,23 @@ the WOFOST model.
 
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
 from api.models.crop import BulkRunner, SingleCrop
+from api.services.dependencies import get_db
 from api.services.wofost_runner import run_from_payload, run_single_crop
 
 router = APIRouter()
 
 
 @router.post("/run_crop")
-def run_crop(request: SingleCrop):
+def run_crop(request: SingleCrop, db: Session = Depends(get_db)):
     """Run a WOFOST simulation for a crop in a specific year and parcel."""
     try:
-        result = run_single_crop(request.crop, request.year, request.parcel_id)
+        result = run_single_crop(
+            request.crop, request.year, request.parcel_id, db
+        )
         return {"result": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
@@ -31,11 +35,13 @@ def run_crop(request: SingleCrop):
 
 @router.post("/run_bulk")
 async def run_bulk(
-    request: BulkRunner, summary: Literal["harvest", "full", "summary"]
+    request: BulkRunner,
+    summary: Literal["harvest", "full", "summary"],
+    db: Session = Depends(get_db),
 ):
     """Run bulk WOFOST simulations."""
     try:
-        result = run_from_payload(request.runs, summary=summary)
+        result = run_from_payload(request.runs, summary=summary, db=db)
         return {"result": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e

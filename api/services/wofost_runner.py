@@ -20,16 +20,26 @@ from ukwofost.core.crop_manager import Crop
 from ukwofost.core.defaults import defaults
 from ukwofost.core.parcel import Parcel
 from ukwofost.core.simulation_manager import WofostSimulator
+from ukwofost.utility.db import SessionLocal
 
 logging.disable(logging.CRITICAL)
 
 
-def run_single_crop(crop: str, year: int, parcel_id: int):
+def _worker(run, summary):
+    """Worker with its own db session for parallel pooling."""
+    session = SessionLocal()
+    try:
+        return run_wofost_simulation(run, summary, db=session)
+    finally:
+        session.close()
+
+
+def run_single_crop(crop: str, year: int, parcel_id: int, db):
     """
     Run a WOFOST simulation for a specific crop and year
     at a given parcel with standard managment.
     """
-    parcel = Parcel(parcel_id)
+    parcel = Parcel(parcel_id, db=db)
     sim = WofostSimulator(
         location=parcel, weather_provider="Mesoclim", soil_provider="SoilGrids"
     )
@@ -46,6 +56,7 @@ def run_single_crop(crop: str, year: int, parcel_id: int):
 def run_from_payload(
     runs: List[Union[dict, BaseModel]],
     summary: Literal["harvest", "full", "summary"],
+    db=None,
     parallel: bool = True,
     max_workers: int = os.cpu_count() - 1,
 ) -> list:
@@ -63,14 +74,13 @@ def run_from_payload(
     """
 
     all_results = []
-
     # Attach an index to every run so we can trace it
     indexed_runs = [(f"run{i+1}", run) for i, run in enumerate(runs)]
 
     if parallel:
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
             futures = {
-                executor.submit(run_wofost_simulation, run, summary): run_id
+                executor.submit(_worker, run, summary): run_id
                 for run_id, run in indexed_runs
             }
             for future in as_completed(futures):
@@ -81,7 +91,7 @@ def run_from_payload(
                     all_results.append(df_result)
     else:
         for run_id, run in indexed_runs:
-            df_result = run_wofost_simulation(run, summary)
+            df_result = run_wofost_simulation(run, summary, db=db)
             if not df_result.empty:
                 df_result["run_id"] = run_id
                 all_results.append(df_result)

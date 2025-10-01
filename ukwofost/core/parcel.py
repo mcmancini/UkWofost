@@ -19,6 +19,7 @@ from ukwofost.core.utils import (
     load_parcel_from_db,
     lonlat2osgrid,
 )
+from ukwofost.utility.db import SessionLocal
 
 
 class Parcel:
@@ -48,8 +49,9 @@ class Parcel:
         app_config.data_dirs["parcel_dir"], "land_parcels.shp"
     )
 
-    def __init__(self, gid):
+    def __init__(self, gid, db=None):
         self._parcel_id = gid
+        self._db = db or SessionLocal()
 
     @property
     def parcel_id(self):
@@ -80,14 +82,14 @@ class Parcel:
     @property
     def elevation(self):
         """Set parcel elevation if exists"""
-        return self._calc_elevation(self.osgrid_code)
+        return self._calc_elevation(self.osgrid_code, self._db)
 
     # pylint: disable=W0718
     @staticmethod
-    def _calc_elevation(os_code):
+    def _calc_elevation(os_code, db):
         """Retrieve elevation of the centroid of the parcel"""
         try:
-            dtm_data = get_dtm_values(os_code)["elevation"]
+            dtm_data = get_dtm_values(os_code, db)["elevation"]
         except Exception as e:
             print(f"Error retrieving elevation for OS code {os_code}: {e}")
             dtm_data = 0.0
@@ -100,7 +102,7 @@ class Parcel:
         Compute OS grid code of the centroid
         of the parcel with id = "parcel_id"
         """
-        parcels_shapefile = load_parcel_from_db(self.parcel_id)
+        parcels_shapefile = load_parcel_from_db(self.parcel_id, self._db)
         parcels_shapefile = parcels_shapefile.to_crs(epsg=4326)
         parcel_centroid = parcels_shapefile[
             parcels_shapefile["gid"] == str(self.parcel_id)
