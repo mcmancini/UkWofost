@@ -7,13 +7,13 @@ dependencies:
   - fastapi
   - flake8
   - gdal
-  - geopandas
+  - geopandas=1.0.1
   - ipykernel
   - netcdf4
   - numpy
   - pandas
   - pip
-  - psycopg2
+  - psycopg2=2.9.9
   - pydantic>=2.0
   - pylint
   - pyproj
