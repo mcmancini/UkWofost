@@ -26,11 +26,12 @@ cropd = YAMLCropDataProvider(
 
 # SITE PARAMETERS
 sitedata = WOFOST80SiteDataProvider(
-    WAV=100,
+    WAV=0,
     CO2=360,
     NAVAILI=80,
     PAVAILI=10,
     KAVAILI=20,
+    SMLIM=0.6,
 )
 
 sitedata["TemperatureSoilinit"] = 5.0
