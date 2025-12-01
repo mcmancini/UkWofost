@@ -21,7 +21,8 @@ class SampleRunner:
     """
 
     def __init__(self,
-                 api_url: str = "http://mmlin.ex.ac.uk",
+                 api_url: str = "http://"
+                 "",
                  port: int = 8000,
                  endpoint: str = "run_bulk",
                  summary_flag: str = "full"):
