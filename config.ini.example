@@ -13,3 +13,7 @@ soil_dir = path\to\SoilData\
 crop_dir = path\to\CropData\
 management_dir = path\to\ManagementData\
 parcel_dir = path\to\ParcelData\
+
+[api_host]
+url = your_api_host.co.uk
+port = 8000

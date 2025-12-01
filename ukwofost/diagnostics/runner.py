@@ -13,7 +13,9 @@ from a set of sampled input parameters generated with the sampler module.
 import time
 import requests
 import pandas as pd
+from ukwofost.core import app_config
 from ukwofost.diagnostics.inspector import SimulationResults
+
 
 
 class SampleRunner:
@@ -23,8 +25,8 @@ class SampleRunner:
 
     def __init__(
         self,
-        api_url: str = "http://" "",
-        port: int = 8000,
+        api_url: str = app_config.api_host['url'],
+        port: int = app_config.api_host['port'],
         endpoint: str = "run_bulk",
         summary_flag: str = "full",
     ):
