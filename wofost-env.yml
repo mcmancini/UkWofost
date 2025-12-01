@@ -15,6 +15,7 @@ dependencies:
   - pip
   - psycopg2=2.9.9
   - pydantic>=2.0
+  - pyDOE
   - pylint
   - pyproj
   - python=3.11.6
