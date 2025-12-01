@@ -49,86 +49,87 @@ runner = SampleRunner()
 results_df = runner.run(samples_df)
 # summary_df = runner.summarize()
 results_df.summarize()
+
 results_df.plot_summary(bins=30)
 
 
-import matplotlib.pyplot as plt
-import pandas as pd
+# import matplotlib.pyplot as plt
+# import pandas as pd
 
-# --- Select run of interest ---
-run_id = "run1"  # change to whichever run you want
+# # --- Select run of interest ---
+# run_id = "run1"  # change to whichever run you want
 
-# 1. Extract the corresponding sample inputs
-sample_row = samples_df.iloc[0]  # first row
+# # 1. Extract the corresponding sample inputs
+# sample_row = samples_df.iloc[0]  # first row
 
-# 2. Extract the corresponding model outputs for that run
-run_df = results_df[results_df["run_id"] == run_id].copy()
-run_df["day"] = pd.to_datetime(run_df["day"])
+# # 2. Extract the corresponding model outputs for that run
+# run_df = results_df[results_df["run_id"] == run_id].copy()
+# run_df["day"] = pd.to_datetime(run_df["day"])
 
-# --- Extract fertilization data ---
-N_rates = [
-    sample_row["N_1"],
-    sample_row["N_2"],
-    sample_row["N_3"],
-    sample_row["N_4"],
-]
-N_dates = [
-    pd.to_datetime(sample_row["N_T1"], format="%d/%m/%Y"),
-    pd.to_datetime(sample_row["N_T2"], format="%d/%m/%Y"),
-    pd.to_datetime(sample_row["N_T3"], format="%d/%m/%Y"),
-    pd.to_datetime(sample_row["N_T4"], format="%d/%m/%Y"),
-]
+# # --- Extract fertilization data ---
+# N_rates = [
+#     sample_row["N_1"],
+#     sample_row["N_2"],
+#     sample_row["N_3"],
+#     sample_row["N_4"],
+# ]
+# N_dates = [
+#     pd.to_datetime(sample_row["N_T1"], format="%d/%m/%Y"),
+#     pd.to_datetime(sample_row["N_T2"], format="%d/%m/%Y"),
+#     pd.to_datetime(sample_row["N_T3"], format="%d/%m/%Y"),
+#     pd.to_datetime(sample_row["N_T4"], format="%d/%m/%Y"),
+# ]
 
-# --- Plotting ---
-fig, ax1 = plt.subplots(figsize=(10, 6))
+# # --- Plotting ---
+# fig, ax1 = plt.subplots(figsize=(10, 6))
 
-# Plot WSO (crop dry weight of storage organ)
-ax1.plot(run_df["day"], run_df["LAI"], color="tab:green", label="LAI (kg/ha)")
-ax1.set_xlabel("Date")
-ax1.set_ylabel("LAI (kg/ha)", color="tab:green")
-ax1.tick_params(axis="y", labelcolor="tab:green")
+# # Plot WSO (crop dry weight of storage organ)
+# ax1.plot(run_df["day"], run_df["LAI"], color="tab:green", label="LAI (kg/ha)")
+# ax1.set_xlabel("Date")
+# ax1.set_ylabel("LAI (kg/ha)", color="tab:green")
+# ax1.tick_params(axis="y", labelcolor="tab:green")
 
-# Secondary axis for Ndemand
-ax2 = ax1.twinx()
-ax2.plot(
-    run_df["day"],
-    run_df["NAVAIL"],
-    color="tab:blue",
-    label="N available (kg/ha)",
-)
-ax2.set_ylabel("N Uptake (kg/ha)", color="tab:blue")
-ax2.tick_params(axis="y", labelcolor="tab:blue")
+# # Secondary axis for Ndemand
+# ax2 = ax1.twinx()
+# ax2.plot(
+#     run_df["day"],
+#     run_df["NAVAIL"],
+#     color="tab:blue",
+#     label="N available (kg/ha)",
+# )
+# ax2.set_ylabel("N Uptake (kg/ha)", color="tab:blue")
+# ax2.tick_params(axis="y", labelcolor="tab:blue")
 
-# Overlay fertilization events
-ax2.scatter(
-    N_dates,
-    N_rates,
-    color="tab:red",
-    s=80,
-    zorder=5,
-    label="Fertilisation (N rate)",
-)
-for i, (date, rate) in enumerate(zip(N_dates, N_rates), 1):
-    ax2.text(
-        date,
-        rate,
-        f"N{i}",
-        color="tab:red",
-        fontsize=9,
-        ha="center",
-        va="bottom",
-    )
+# # Overlay fertilization events
+# ax2.scatter(
+#     N_dates,
+#     N_rates,
+#     color="tab:red",
+#     s=80,
+#     zorder=5,
+#     label="Fertilisation (N rate)",
+# )
+# for i, (date, rate) in enumerate(zip(N_dates, N_rates), 1):
+#     ax2.text(
+#         date,
+#         rate,
+#         f"N{i}",
+#         color="tab:red",
+#         fontsize=9,
+#         ha="center",
+#         va="bottom",
+#     )
 
-# Titles, legend, formatting
-fig.suptitle(
-    f"Run {run_id}: WSO, N Uptake, and Fertilisation Events", fontsize=14
-)
-fig.autofmt_xdate()
+# # Titles, legend, formatting
+# fig.suptitle(
+#     f"Run {run_id}: WSO, N Uptake, and Fertilisation Events", fontsize=14
+# )
+# fig.autofmt_xdate()
 
-# Build a combined legend
-lines1, labels1 = ax1.get_legend_handles_labels()
-lines2, labels2 = ax2.get_legend_handles_labels()
-ax2.legend(lines1 + lines2, labels1 + labels2, loc="upper left")
+# # Build a combined legend
+# lines1, labels1 = ax1.get_legend_handles_labels()
+# lines2, labels2 = ax2.get_legend_handles_labels()
+# ax2.legend(lines1 + lines2, labels1 + labels2, loc="upper left")
 
-plt.tight_layout()
-plt.show()
+# plt.tight_layout()
+# plt.show()
