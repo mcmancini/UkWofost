@@ -120,7 +120,7 @@ from sqlalchemy import text
 
 from ukwofost.utility.db import SessionLocal
 
-
+# pylint: disable=C0302
 class BNGError(Exception):
     """Exception raised by OSgrid coordinate conversion functions"""
 
@@ -806,10 +806,11 @@ def get_dtm_values(parcel_os_code, db=None):
         dict_keys = ["x", "y", "elevation", "slope", "aspect"]
         dtm_dict = dtm_dict = dict(zip(dict_keys, dtm_vals))
         return dtm_dict
-
+    # pylint: disable=W0718
     except Exception as error:
         print(f"An unexpected error occurred: {error}")
         return {"x": 0, "y": 0, "elevation": 0, "slope": 0, "aspect": 0}
+    # pylint: enable=W0718
 
     finally:
         if created_here:
@@ -942,7 +943,7 @@ def check_angstrom(angst_a, angst_b):
         )
     return angstrom_a, angstrom_b
 
-
+# pylint: disable=R1710
 def estimate_angstrom(toa=None, toc=None):
     """
     Determine Angstrom A/B parameters from Top-of-Atmosphere and
@@ -1037,6 +1038,5 @@ def load_parcel_from_db(parcel_gid, db=None):
         if created_here:
             db.close()
     # pylint: enable=W0718
-
 
 # pylint: enable=R1710

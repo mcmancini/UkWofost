@@ -8,8 +8,8 @@ wofost_diagnostics.py
 Script for diagnosing and analyzing WOFOST 8.0 model simulations.
 """
 
-from ukwofost.diagnostics.sampler import ParameterSampler
 from ukwofost.diagnostics.runner import SampleRunner
+from ukwofost.diagnostics.sampler import ParameterSampler
 
 sampler = ParameterSampler()
 YEAR = 2022
@@ -52,8 +52,8 @@ results_df.summarize()
 results_df.plot_summary(bins=30)
 
 
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
 
 # --- Select run of interest ---
 run_id = "run1"  # change to whichever run you want
