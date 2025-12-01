@@ -15,17 +15,19 @@ import requests
 import pandas as pd
 from ukwofost.diagnostics.inspector import SimulationResults
 
+
 class SampleRunner:
     """
     Class to handle running WOFOST simulations for a set of sampled parameters.
     """
 
-    def __init__(self,
-                 api_url: str = "http://"
-                 "",
-                 port: int = 8000,
-                 endpoint: str = "run_bulk",
-                 summary_flag: str = "full"):
+    def __init__(
+        self,
+        api_url: str = "http://" "",
+        port: int = 8000,
+        endpoint: str = "run_bulk",
+        summary_flag: str = "full",
+    ):
         """
         api_url: str, URL of the FastAPI endpoint to run simulations
         port: int, port number of the API
@@ -39,9 +41,9 @@ class SampleRunner:
     def run(self, samples_df: pd.DataFrame) -> pd.DataFrame:
         """
         Run WOFOST simulations for the provided samples DataFrame.
-        
+
         samples_df: pd.DataFrame, DataFrame containing sampled input parameters
-        
+
         Returns:
             pd.DataFrame with simulation results
         """

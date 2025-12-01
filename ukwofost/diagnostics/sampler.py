@@ -15,6 +15,7 @@ from pyDOE import lhs
 import pandas as pd
 from ukwofost.diagnostics.default_ranges import parameter_defaults
 
+
 class ParameterSampler:
     """Class to handle sampling of input parameters for WOFOST simulations."""
 
@@ -32,10 +33,13 @@ class ParameterSampler:
         # Validate parameters passed
         if sample_params is None or sample_params == "all":
             sample_params = [
-                p for p, v in self.parameter_defaults.items()
+                p
+                for p, v in self.parameter_defaults.items()
                 if v[0] is not None
             ]
-        self._validate_sampled_parameters(sample_params, self.parameter_defaults)
+        self._validate_sampled_parameters(
+            sample_params, self.parameter_defaults
+        )
 
         n_sampled = len(sample_params)
         lhs_sample = lhs(n_sampled, samples=n_samples)
@@ -95,7 +99,9 @@ class ParameterSampler:
         fmt = "%d/%m/%Y"
 
         if not isinstance(crop_start_date, str):
-            raise TypeError(f"crop_start_date must be a string in format {fmt}")
+            raise TypeError(
+                f"crop_start_date must be a string in format {fmt}"
+            )
 
         try:
             start = datetime.strptime(crop_start_date, fmt).date()
@@ -129,10 +135,10 @@ class ParameterSampler:
         )
 
         # Format as strings
-        df['NPK_T1'] = [d.strftime(fmt) for d in npk_t1]
-        df['NPK_T2'] = [d.strftime(fmt) for d in npk_t2]
-        df['NPK_T3'] = [d.strftime(fmt) for d in npk_t3]
-        df['NPK_T4'] = [d.strftime(fmt) for d in npk_t4]
+        df["NPK_T1"] = [d.strftime(fmt) for d in npk_t1]
+        df["NPK_T2"] = [d.strftime(fmt) for d in npk_t2]
+        df["NPK_T3"] = [d.strftime(fmt) for d in npk_t3]
+        df["NPK_T4"] = [d.strftime(fmt) for d in npk_t4]
 
         return df
 
@@ -159,9 +165,9 @@ class ParameterSampler:
         n_3 = (break_points[:, 2] - break_points[:, 1]) * total_n
         n_4 = (1 - break_points[:, 2]) * total_n
 
-        df['N_1'] = n_1
-        df['N_2'] = n_2
-        df['N_3'] = n_3
-        df['N_4'] = n_4
+        df["N_1"] = n_1
+        df["N_2"] = n_2
+        df["N_3"] = n_3
+        df["N_4"] = n_4
 
         return df

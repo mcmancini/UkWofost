@@ -14,6 +14,7 @@ and run with the runner module.
 import pandas as pd
 import matplotlib.pyplot as plt
 
+
 class SimulationResults(pd.DataFrame):
     """
     A subclass of pandas.DataFrame for handling and diagnosing WOFOST simulation results.
@@ -34,12 +35,14 @@ class SimulationResults(pd.DataFrame):
     def summarize(self) -> pd.DataFrame:
         """
         Summarize the output DataFrame to get final yields for each run.
-        
+
         Returns:
             pd.DataFrame with final yields per run
         """
         if self is None:
-            raise ValueError("No output data available. Please run simulations first.")
+            raise ValueError(
+                "No output data available. Please run simulations first."
+            )
 
         # select index of max yield per run
         max_yield_idx = self.groupby("run_id")["yield"].idxmax()
@@ -47,11 +50,7 @@ class SimulationResults(pd.DataFrame):
         cols = ["run_id", "day", "yield"]
 
         # create summary DataFrame
-        summary_df = (
-            self
-            .loc[max_yield_idx, cols]
-            .reset_index(drop=True)
-        )
+        summary_df = self.loc[max_yield_idx, cols].reset_index(drop=True)
 
         return summary_df
 
@@ -60,7 +59,9 @@ class SimulationResults(pd.DataFrame):
         Plot a summary of the simulation results.
         """
         if self is None:
-            raise ValueError("No output data available. Please run simulations first.")
+            raise ValueError(
+                "No output data available. Please run simulations first."
+            )
 
         summary_df = self.summarize()
         plt.hist(summary_df["yield"], bins=bins, edgecolor="black")

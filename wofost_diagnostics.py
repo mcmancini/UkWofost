@@ -39,14 +39,11 @@ fixed_params = {
     "P_3": 0.0,
     "P_4": 0.0,
     "K_2": 0.0,
-    "K_3": 0.0, 
+    "K_3": 0.0,
     "K_4": 0.0,
 }
 
-samples_df = sampler.sample(
-    fixed_params=fixed_params,
-    n_samples=500
-)
+samples_df = sampler.sample(fixed_params=fixed_params, n_samples=500)
 
 runner = SampleRunner()
 results_df = runner.run(samples_df)
@@ -69,7 +66,12 @@ run_df = results_df[results_df["run_id"] == run_id].copy()
 run_df["day"] = pd.to_datetime(run_df["day"])
 
 # --- Extract fertilization data ---
-N_rates = [sample_row["N_1"], sample_row["N_2"], sample_row["N_3"], sample_row["N_4"]]
+N_rates = [
+    sample_row["N_1"],
+    sample_row["N_2"],
+    sample_row["N_3"],
+    sample_row["N_4"],
+]
 N_dates = [
     pd.to_datetime(sample_row["N_T1"], format="%d/%m/%Y"),
     pd.to_datetime(sample_row["N_T2"], format="%d/%m/%Y"),
@@ -88,17 +90,39 @@ ax1.tick_params(axis="y", labelcolor="tab:green")
 
 # Secondary axis for Ndemand
 ax2 = ax1.twinx()
-ax2.plot(run_df["day"], run_df["NAVAIL"], color="tab:blue", label="N available (kg/ha)")
+ax2.plot(
+    run_df["day"],
+    run_df["NAVAIL"],
+    color="tab:blue",
+    label="N available (kg/ha)",
+)
 ax2.set_ylabel("N Uptake (kg/ha)", color="tab:blue")
 ax2.tick_params(axis="y", labelcolor="tab:blue")
 
 # Overlay fertilization events
-ax2.scatter(N_dates, N_rates, color="tab:red", s=80, zorder=5, label="Fertilisation (N rate)")
+ax2.scatter(
+    N_dates,
+    N_rates,
+    color="tab:red",
+    s=80,
+    zorder=5,
+    label="Fertilisation (N rate)",
+)
 for i, (date, rate) in enumerate(zip(N_dates, N_rates), 1):
-    ax2.text(date, rate, f"N{i}", color="tab:red", fontsize=9, ha="center", va="bottom")
+    ax2.text(
+        date,
+        rate,
+        f"N{i}",
+        color="tab:red",
+        fontsize=9,
+        ha="center",
+        va="bottom",
+    )
 
 # Titles, legend, formatting
-fig.suptitle(f"Run {run_id}: WSO, N Uptake, and Fertilisation Events", fontsize=14)
+fig.suptitle(
+    f"Run {run_id}: WSO, N Uptake, and Fertilisation Events", fontsize=14
+)
 fig.autofmt_xdate()
 
 # Build a combined legend
