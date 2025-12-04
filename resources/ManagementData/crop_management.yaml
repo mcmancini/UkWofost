@@ -1,0 +1,159 @@
+"winter_wheat": {
+    "variety": "Winter_wheat_101",
+    "crop_start_month": 10,
+    "crop_start_day": 15,
+    "crop_end_type": "maturity",
+    "max_duration": 365,
+    "apply_npk": [
+        {"month": 2, "day": 20, "N_amount": 60, "P_amount": 50, "K_amount": 50},
+        {"month": 3, "day": 10, "N_amount": 100, "P_amount": 100, "K_amount": 100},
+        {"month": 4, "day": 15, "N_amount": 50, "P_amount": 100, "K_amount": 100}
+    ]
+}
+
+"spring_wheat": {
+    "variety": "Spring_wheat_101",  
+    "crop_start_month": 3,
+    "crop_start_day": 15,
+    "crop_end_type": "maturity",
+    "max_duration": 365,
+    "apply_npk": [
+        {"month": 4, "day": 5, "N_amount": 50, "P_amount": 50, "K_amount": 50},
+        {"month": 5, "day": 5, "N_amount": 150, "P_amount": 50, "K_amount": 50}
+    ]
+}
+
+"winter_barley": {
+    "variety": "Winter_barley_301",
+    "crop_start_month": 10,
+    "crop_start_day": 15,
+    "crop_end_type": "maturity",
+    "max_duration": 365,
+    "apply_npk": [
+        {"month": 2, "day": 20, "N_amount": 60, "P_amount": 50, "K_amount": 50},
+        {"month": 3, "day": 10, "N_amount": 100, "P_amount": 100, "K_amount": 100},
+        {"month": 4, "day": 15, "N_amount": 50, "P_amount": 100, "K_amount": 100}
+    ]
+}
+
+"spring_barley": {
+    "variety": "Spring_barley_301",
+    "crop_start_month": 3,
+    "crop_start_day": 15,
+    "crop_end_type": "maturity",
+    "max_duration": 365,
+    "apply_npk": [
+        {"month": 4, "day": 5, "N_amount": 50, "P_amount": 50, "K_amount": 50},
+        {"month": 5, "day": 15, "N_amount": 100, "P_amount": 50, "K_amount": 50}
+    ]
+}
+
+"winter_oats": {
+    "variety": "Winter_oats_301",
+    "crop_start_month": 10,
+    "crop_start_day": 15,
+    "crop_end_type": "maturity",
+    "max_duration": 365,
+    "apply_npk": [
+        {"month": 2, "day": 20, "N_amount": 60, "P_amount": 50, "K_amount": 50},
+        {"month": 3, "day": 10, "N_amount": 100, "P_amount": 100, "K_amount": 100},
+        {"month": 4, "day": 15, "N_amount": 50, "P_amount": 100, "K_amount": 100}
+    ]
+}
+
+"spring_oats": {
+    "variety": "Spring_oats_301",
+    "crop_start_month": 3,
+    "crop_start_day": 15,
+    "crop_end_type": "maturity",
+    "max_duration": 365,
+    "apply_npk": [
+        {"month": 4, "day": 5, "N_amount": 50, "P_amount": 50, "K_amount": 50},
+        {"month": 5, "day": 15, "N_amount": 100, "P_amount": 50, "K_amount": 50}
+    ]
+}
+
+"maize" : {
+    "variety": "Grain_maize_201",
+    "crop_start_month": 4,
+    "crop_start_day": 1,
+    "crop_end_type": "maturity",
+    "max_duration": 365,
+    "apply_npk": [
+        {"month": 4, "day": 15, "N_amount": 20, "P_amount": 0, "K_amount": 0},
+        {"month": 5, "day": 15, "N_amount": 20, "P_amount": 25, "K_amount": 30},
+        {"month": 6, "day": 15, "N_amount": 20, "P_amount": 25, "K_amount": 40}
+    ]
+}
+
+"potato": {
+    "variety": "Potato_701",
+    "crop_start_month": 4,
+    "crop_start_day": 1,
+    "crop_end_type": "maturity",
+    "max_duration": 365,
+    "apply_npk": [
+        {"month": 5, "day": 1, "N_amount": 40, "P_amount": 40, "K_amount": 40},
+        {"month": 5, "day": 25, "N_amount": 70, "P_amount": 35, "K_amount": 105},
+        {"month": 6, "day": 5, "N_amount": 70, "P_amount": 35, "K_amount": 105},
+        {"month": 6, "day": 30, "N_amount": 70, "P_amount": 35, "K_amount": 105}
+    ]
+}
+
+"rapeseed": {
+        "variety": "Oilseed_rape_1001",
+        "crop_start_month": 9,
+        "crop_start_day": 5,
+        "crop_end_type": "maturity",
+        "max_duration": 365,
+        "apply_npk": [
+            {"month": 12, "day": 5, "N_amount": 60, "P_amount": 20, "K_amount": 50},
+            {"month": 2, "day": 10, "N_amount": 80, "P_amount": 60, "K_amount": 100},
+            {"month": 3, "day": 15, "N_amount": 60, "P_amount": 20, "K_amount": 100},
+            {"month": 4, "day": 15, "N_amount": 50, "P_amount": 20, "K_amount": 100},
+        ]
+}
+
+"rye_grass": {
+    "variety": "Northern_RyeGrass",
+    "crop_start_month": 11,
+    "crop_start_day": 5,
+    "crop_end_type": "maturity",
+    "max_duration": 730,
+    "mowing": [
+        {"month": 5, "day": 1, "biomass_remaining": 320},
+        {"month": 5, "day": 25, "biomass_remaining": 320},
+        {"month": 6, "day": 5, "biomass_remaining": 320}
+    ]
+}
+
+"fababean": {
+    "variety": "Faba_bean_801",
+    "crop_start_month": 3,
+    "crop_start_day": 15,
+    "crop_end_type": "maturity",
+    "max_duration": 365,
+    "apply_npk": [
+        {"month": 4, "day": 5, "N_amount": 0, "P_amount": 50, "K_amount": 50},
+        {"month": 5, "day": 15, "N_amount": 0, "P_amount": 100, "K_amount": 100}
+    ]
+}
+
+"sugarbeet": {
+    "variety": "Sugarbeet_601",
+    "crop_start_month": 3,
+    "crop_start_day": 15,
+    "crop_end_type": "maturity",
+    "max_duration": 365,
+    "apply_npk": [
+        {"month": 4, "day": 5, "N_amount": 100, "P_amount": 50, "K_amount": 50},
+        {"month": 5, "day": 15, "N_amount": 120, "P_amount": 100, "K_amount": 100}
+    ]
+}
+
+"fallow": {
+    "crop_start_month": 9,
+    "crop_start_day": 1
+}
+
+
