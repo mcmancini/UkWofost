@@ -6,8 +6,8 @@
 Default parameter ranges for sampling and diagnostics
 =====================================================
 N.B. The default values are taken for the most part from
-the Wofost 8.1 documentation; values for PFFieldCapacity, 
-PFWiltingPoint and SurfaceConductivity are taken from 
+the Wofost 8.1 documentation; values for PFFieldCapacity,
+PFWiltingPoint and SurfaceConductivity are taken from
 ChatGPT; these should be reviewed by an expert;
 There is a very good chance that the units of SurfaceConductivity
 are not cm/second as indicated in the Wofost 8.1 documentation
@@ -20,8 +20,8 @@ parameter_defaults = {
     "WAV": (None, [0.0, 6.0], float),
     "CRAIRC": (0.060, [0.04, 0.1], float),
     "SMLIM": (0.6, [0.0, 1.0], float),
-    "PFFieldCapacity": (2.0, [1.7, 3.5], float),
-    "PFWiltingPoint": (4.2, [2.70, 3.48], float),
+    "FIELD_CAPACITY": (2.0, [1.7, 3.5], float),
+    "WILTING_POTENTIAL": (4.2, [2.70, 3.48], float),
     "CO2": (None, [300.0, 1400.0], float),
     "SOPE": (1.47, [1.0, 2.0], float),
     "NAVAILI": (80, [0.0, 250.0], float),
