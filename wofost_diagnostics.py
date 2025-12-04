@@ -25,19 +25,21 @@ fixed_params = {
     "WAV": 0.0,
     "CRAIRC": 0.06,
     "SMLIM": 0.6,
-    "PFFieldCapacity": -0.3,
-    "PFWiltingPoint": 3.2,
+    "FIELD_CAPACITY": -0.3,
+    "WILTING_POTENTIAL": 3.8,
     "CO2": 400.0,
     "SOPE": 1.47,
     "NAVAILI": 0.0,
-    "PAVAILI": 0.0,
-    "KAVAILI": 0.0,
+    "PAVAILI": 650.0,
+    "KAVAILI": 650.0,
     "N_2": 0.0,
     "N_3": 0.0,
     "N_4": 0.0,
+    "P_1": 0.0,
     "P_2": 0.0,
     "P_3": 0.0,
     "P_4": 0.0,
+    "K_1": 0.0,
     "K_2": 0.0,
     "K_3": 0.0,
     "K_4": 0.0,
@@ -84,7 +86,12 @@ results_df.plot_summary(bins=30)
 # fig, ax1 = plt.subplots(figsize=(10, 6))
 
 # # Plot WSO (crop dry weight of storage organ)
-# ax1.plot(run_df["day"], run_df["LAI"], color="tab:green", label="LAI (kg/ha)")
+# ax1.plot(
+#     run_df["day"],
+#     run_df["LAI"],
+#     color="tab:green",
+#     label="LAI (kg/ha)"
+# )
 # ax1.set_xlabel("Date")
 # ax1.set_ylabel("LAI (kg/ha)", color="tab:green")
 # ax1.tick_params(axis="y", labelcolor="tab:green")
