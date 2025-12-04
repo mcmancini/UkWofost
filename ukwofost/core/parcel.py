@@ -10,10 +10,8 @@ Generate parcels with attributes to be used to instantiate
 WofostSimulator objects.
 """
 
-import os
 import warnings
 
-from ukwofost.core import app_config
 from ukwofost.core.utils import (
     get_dtm_values,
     load_parcel_from_db,
@@ -44,10 +42,6 @@ class Parcel:
     __str__(self, /)
         Return str(self).
     """
-
-    _PARCEL_DATA = os.path.join(
-        app_config.data_dirs["parcel_dir"], "land_parcels.shp"
-    )
 
     def __init__(self, gid, db=None):
         self._parcel_id = gid
