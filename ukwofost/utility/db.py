@@ -18,14 +18,20 @@ from ukwofost.core import app_config
 
 def create_db_connection(app_config_params):
     """Create a database connection using SQLAlchemy."""
-    db_name = os.path.expandvars(app_config_params.db_parameters.get("db_name", ""))
+    db_name = os.path.expandvars(
+        app_config_params.db_parameters.get("db_name", "")
+    )
     db_name = None if not db_name else db_name
-    db_user = os.path.expandvars(app_config_params.db_parameters.get("username", ""))
+    db_user = os.path.expandvars(
+        app_config_params.db_parameters.get("username", "")
+    )
     db_user = None if not db_user else db_user
     db_password = os.path.expandvars(
         app_config_params.db_parameters.get("password", "")
     )
-    db_host = os.path.expandvars(app_config_params.db_parameters.get("host", ""))
+    db_host = os.path.expandvars(
+        app_config_params.db_parameters.get("host", "")
+    )
     db_password = (
         None if not db_password else urllib.parse.quote_plus(db_password)
     )

@@ -452,9 +452,7 @@ class CropBuilder:
         crop_params = self.default_values.copy()
         for param in self.crop_parameters:
             if param in sample.index and pd.notna(sample[param]):
-                if (
-                    param in ("crop_start_date", "start_crop_calendar")
-                ):
+                if param in ("crop_start_date", "start_crop_calendar"):
                     datetime_obj = pd.to_datetime(sample[param], dayfirst=True)
                     crop_params[param] = datetime_obj.date()
                 else:

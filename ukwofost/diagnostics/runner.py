@@ -17,7 +17,6 @@ from ukwofost.core import app_config
 from ukwofost.diagnostics.inspector import SimulationResults
 
 
-
 class SampleRunner:
     """
     Class to handle running WOFOST simulations for a set of sampled parameters.
@@ -25,8 +24,8 @@ class SampleRunner:
 
     def __init__(
         self,
-        api_url: str = app_config.api_host['url'],
-        port: int = app_config.api_host['port'],
+        api_url: str = app_config.api_host["url"],
+        port: int = app_config.api_host["port"],
         endpoint: str = "run_bulk",
         summary_flag: str = "full",
     ):
@@ -34,7 +33,8 @@ class SampleRunner:
         api_url: str, URL of the FastAPI endpoint to run simulations
         port: int, port number of the API
         endpoint: str, API endpoint for running bulk simulations
-        summary_flag: str, type of summary to request ("full", "summary", "harvest")
+        summary_flag: str, type of summary to request
+        ("full", "summary", "harvest")
         """
         self.api_url = f"{api_url}:{port}/{endpoint}?summary={summary_flag}"
         self.input_df = None

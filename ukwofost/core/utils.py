@@ -120,6 +120,7 @@ from sqlalchemy import text
 
 from ukwofost.utility.db import SessionLocal
 
+
 # pylint: disable=C0302
 class BNGError(Exception):
     """Exception raised by OSgrid coordinate conversion functions"""
@@ -943,6 +944,7 @@ def check_angstrom(angst_a, angst_b):
         )
     return angstrom_a, angstrom_b
 
+
 # pylint: disable=R1710
 def estimate_angstrom(toa=None, toc=None):
     """
@@ -1038,5 +1040,6 @@ def load_parcel_from_db(parcel_gid, db=None):
         if created_here:
             db.close()
     # pylint: enable=W0718
+
 
 # pylint: enable=R1710

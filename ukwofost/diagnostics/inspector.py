@@ -6,8 +6,8 @@
 inspector.py
 =========
 Tools to perform diagnostics, summaries and plotting of WOFOST model simulation
-results from a set of sampled input parameters generated with the sampler module
-and run with the runner module.
+results from a set of sampled input parameters generated with the sampler
+ module and run with the runner module.
 --------------------------------------------------------------------------------
 """
 
@@ -17,7 +17,8 @@ import matplotlib.pyplot as plt
 
 class SimulationResults(pd.DataFrame):
     """
-    A subclass of pandas.DataFrame for handling and diagnosing WOFOST simulation results.
+    A subclass of pandas.DataFrame for handling and diagnosing WOFOST
+    simulation results.
     """
 
     # --- Required metadata so pandas operations return your subclass ---
