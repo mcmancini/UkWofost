@@ -49,7 +49,7 @@ parcel = Parcel(PARCEL_ID)
 # Build Wofost simulator
 # os_code = lonlat2osgrid((LON, LAT), 10)
 sim = WofostSimulator(
-    location=parcel, weather_provider="Mesoclim", soil_provider="SoilGrids"
+    location=parcel, weather_provider="MesoclimParquet", soil_provider="SoilGrids"
 )
 
 crop_management = copy.deepcopy(defaults.get("management").get(CROP))

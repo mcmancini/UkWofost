@@ -48,7 +48,7 @@ def run_single_simulation(sim_index):
     """wrapper function to run a single wofost simulation"""
     parcel = Parcel(PARCEL_ID)
     sim = WofostSimulator(
-        location=parcel, weather_provider="Mesoclim", soil_provider="SoilGrids"
+        location=parcel, weather_provider="MesoclimParquet", soil_provider="SoilGrids"
     )
     crop = Crop(calendar_year=YEAR, crop=CROP, **crop_management)
     result = sim.run(crop_or_rotation=crop, output_flag="summary")

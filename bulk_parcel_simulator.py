@@ -74,7 +74,7 @@ def run_rotations(input_sample_df, output_filename):
         parcel_obj = Parcel(parcel)
         sim = WofostSimulator(
             location=parcel_obj,
-            weather_provider="Mesoclim",
+            weather_provider="MesoclimParquet",
             soil_provider="SoilGrids",
         )
         parcel_df = input_sample_df[(input_sample_df["parcel_id"] == parcel)]

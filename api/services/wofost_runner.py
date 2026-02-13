@@ -41,7 +41,7 @@ def run_single_crop(crop: str, year: int, parcel_id: int, db):
     """
     parcel = Parcel(parcel_id, db=db)
     sim = WofostSimulator(
-        location=parcel, weather_provider="Mesoclim", soil_provider="SoilGrids"
+        location=parcel, weather_provider="MesoclimParquet", soil_provider="SoilGrids"
     )
     crop_management = defaults.get("management").get(crop)
 

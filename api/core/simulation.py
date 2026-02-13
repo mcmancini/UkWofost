@@ -28,7 +28,7 @@ def run_wofost_simulation(
         parcel_obj = Parcel(parcel, db=db)
         sim = WofostSimulator(
             location=parcel_obj,
-            weather_provider="Mesoclim",
+            weather_provider="MesoclimParquet",
             soil_provider="SoilGrids",
         )
 

@@ -26,6 +26,7 @@ from ukwofost.data_providers.weather_manager import (
     Era5WeatherDataProvider,
     NetCDFWeatherDataProvider,
     ParcelWeatherDataProvider,
+    MesoclimWeatherDataProvider,
 )
 
 
@@ -210,20 +211,27 @@ class WofostSimulator:
             wdp = NetCDFWeatherDataProvider(
                 self.osgrid_code, self._rcp, self._ensemble
             )
-        elif self.weather_provider == "Mesoclim":
+        elif self.weather_provider == "MesoclimCSV":
             if isinstance(self._parcel, str):
                 raise TypeError(
                     "Custom weather data can only be retrieved for parcels "
                     "and not for geographic coordinates"
                 )
             wdp = ParcelWeatherDataProvider(parcel=self._parcel)
+        elif self.weather_provider == "MesoclimParquet":
+            if isinstance(self._parcel, str):
+                raise TypeError(
+                    "Custom weather data can only be retrieved for parcels "
+                    "and not for geographic coordinates"
+                )
+            wdp = MesoclimWeatherDataProvider(parcel=self._parcel)
         elif self.weather_provider == "ERA5":
             wdp = Era5WeatherDataProvider(location=self._parcel)
         else:
             wdp = None
             raise ValueError(
                 "weather provider can only be 'NASA', "
-                "'Chess', 'Mesoclim' or 'ERA5'"
+                "'Chess', 'MesoclimCSV', 'MesoclimParquet' or 'ERA5'"
             )
         return wdp
 
