@@ -20,6 +20,7 @@ from pcse.exceptions import PCSEError
 from pcse.fileinput.csvweatherdataprovider import ParseError, csvdate_to_date
 from pcse.settings import settings
 from pcse.util import reference_ET
+from pathlib import Path # Added for recursive searching of mesoclim directory
 
 from ukwofost.core import app_config
 from ukwofost.core.parcel import Parcel
@@ -421,7 +422,6 @@ class NetCDFWeatherDataProvider(WeatherDataProvider):
 
     # pylint: enable=R0913
 
-
 class ParcelWeatherDataProvider(WeatherDataProvider):
     """
     Class based on the pcse.fileinput.CSVWeatherDataProvider in WOFOST
@@ -673,6 +673,271 @@ class ParcelWeatherDataProvider(WeatherDataProvider):
             self.logger.warning(msg)
 
 
+class MesoclimWeatherDataProvider(WeatherDataProvider):
+    """
+    Class based on the pcse.fileinput.CSVWeatherDataProvider in WOFOST
+    to load weather data for a specific parcel from parquet files. Parcels
+    are the highest resolution possible for the UK farm model that relies on
+    an UK implementation of WOFOST for the estimation of future crop yields.
+    Parcel weather data comes from downscaling procedures from Ilya Maclean
+    and Jon Mosedale
+
+    Parameters
+    ----------
+    :param parcel (Parcel): an instance of the class Parcel for which weather
+        data needs to be retrieved
+    :param dateformat: date format to be read. Default is '%Y%m%d'
+    :keyword ETmodel: "PM"|"P" for selecting Penman-Monteith or Penman
+        method for reference evapotranspiration. Default is 'PM'.
+    :param force_reload: Ignore cache file and reload from the parquet file
+
+    As this is a different
+    """
+
+    obs_conversions = {
+        "TMAX": no_conversion,
+        "TMIN": no_conversion,
+        "IRRAD": w_to_j,
+        "VAP": no_conversion,
+        "WIND": no_conversion,
+        "RAIN": mm_to_cm,
+        "SNOWDEPTH": no_conversion,
+    }
+
+    variable_mapping = {
+        "date": "DAY",
+        "tmin": "TMIN",
+        "tmax": "TMAX",
+        "prec": "RAIN",
+        "windspeed": "WIND",
+    }
+
+    # pylint: disable=R0913,C0103
+    def __init__(
+        self,
+        parcel,
+        delimiter=",",
+        dateformat="%d/%m/%Y",
+        possible_date_formats=None,
+        ETmodel="PM",
+        force_reload=False,
+    ):
+        WeatherDataProvider.__init__(self)
+        self.longitude = parcel.lon
+        self.latitude = parcel.lat
+        self.parcel_id = parcel.parcel_id
+        self.elevation = parcel.elevation
+        self.dateformat = dateformat
+        if possible_date_formats is None:
+            self.possible_date_formats = ["%d/%m/%Y", "%Y-%m-%d"]
+        self.ETmodel = ETmodel
+        self.nodata_value = -99
+        self.has_sunshine = False
+        self._create_header()
+        self._create_angstrom()
+
+        if not os.path.exists(self.fp_pq_fname):
+            msg = f"Cannot find weather file at: {self.fp_pq_fname}"
+            raise PCSEError(msg)
+
+        if force_reload or not self._load_cache_file(self.fp_pq_fname):
+            # Read parquet file by path
+            self._read_observations(self.fp_pq_fname, delimiter)
+            self._write_cache_file(self.fp_pq_fname)
+
+    @property
+    def fp_pq_fname(self):
+        """Set path including name of weather file"""
+        return self._build_filename(self.parcel_id)
+
+    @staticmethod
+    def _build_filename(parcel_id):
+        """Build filename for weather data"""
+        base_dir = Path(app_config.data_dirs["downscaled_climate_dir"])
+        pattern = f"parcel_{parcel_id}_mesoclim.parquet"
+
+        matches = list(base_dir.rglob(pattern))
+        if not matches:
+            raise FileNotFoundError(f"No file found for {pattern}")
+        if len(matches) > 1:
+            raise RuntimeError(f"Multiple files found for {pattern}: {matches}")
+
+        return str(matches[0])
+
+    @staticmethod
+    def _create_oscode(lon, lat):
+        """Create OS grid reference code for lon-lat pair"""
+        return lonlat2osgrid(coords=(lon, lat), figs=8)
+
+    def _create_header(self):
+        country = "Great Britain"
+        location = lonlat2osgrid((self.longitude, self.latitude), figs=8)
+        desc = (
+            f"Weather data from downscaled UKCP18 data for parcel "
+            f"'{self.parcel_id}' at location '{location}'"
+        )
+        src = "Environment and Sustainability Institute, University of Exeter"
+        contact = (
+            "Jonathan Mosedale: J.Mosedale@exeter.ac.uk \n"
+            "Ilya Maclean: i.m.d.maclean@exeter.ac.uk\n"
+        )
+        self.description = [
+            "Weather data for:",
+            f"Country: {country}",
+            f"Station: {self._create_oscode(self.longitude, self.latitude)}",
+            f"Description: {desc}",
+            f"Source: {src}",
+            f"Contact: {contact}",
+        ]
+
+    # pylint: disable=W4902, R0914, R0912
+    def _read_observations(self, pq_file, delimiter):
+        """
+        Processes the rows with meteo data and converts into the correct units.
+        """
+        # pq_file is the parquet file path (string)
+        df = pd.read_parquet(pq_file)
+
+        # Make column names comparable to csv.DictReader keys
+        df.columns = [c.lower() for c in df.columns]
+
+        # Replace empty strings with NaN (mimic empty CSV cells)
+        df = df.replace("", np.nan)
+
+        # Convert to a list of row-dicts (like csv.DictReader produces)
+        obs = df.to_dict(orient="records")
+        
+        keys_to_remove = [
+            "swdown",
+            "lwdown",
+            "relhum",
+            "pres",
+        ]
+
+        renamed_obs = []
+        for d in obs:
+            renamed_d = {}
+            for old_name, new_name in self.variable_mapping.items():
+                renamed_d[new_name] = d.pop(old_name)
+
+            renamed_d["SNOWDEPTH"] = np.nan
+            renamed_d["VAP"] = rh_to_vpress(
+                float(d["relhum"]), float(renamed_d["TMIN"])
+            )
+            renamed_d["IRRAD"] = float(d["swdown"])
+
+            # Merge with the remaining data
+            renamed_d.update(d)
+            renamed_obs.append(renamed_d)
+
+        for item in renamed_obs:
+            for key in keys_to_remove:
+                item.pop(key, None)
+
+        for i, d in enumerate(renamed_obs):
+            try:
+                for fmt in self.possible_date_formats:
+                    try:
+                        day = csvdate_to_date(d["DAY"], fmt)
+                        break
+                    except ValueError:
+                        continue
+                else:
+                    raise ValueError(
+                        f"Date {d['DAY']} is not in a recognized format"
+                    )
+                row = {"DAY": day}
+                for label, func in self.obs_conversions.items():
+                    value = float(d[label])
+                    r = func(value)
+                    if math.isnan(r):
+                        if label == "SNOWDEPTH":
+                            continue
+                        raise ParseError
+                    row[label] = r
+
+                # Reference ET in mm/day
+                e0, es0, et0 = reference_ET(
+                    LAT=self.latitude,
+                    ELEV=self.elevation,
+                    ANGSTA=self.angstA,
+                    ANGSTB=self.angstB,
+                    ETMODEL=self.ETmodel,
+                    **row,
+                )
+                # convert to cm/day
+                row["E0"] = e0 / 10.0
+                row["ES0"] = es0 / 10.0
+                row["ET0"] = et0 / 10.0
+
+                wdc = WeatherDataContainer(
+                    LAT=self.latitude,
+                    LON=self.longitude,
+                    ELEV=self.elevation,
+                    **row,
+                )
+                self._store_WeatherDataContainer(wdc, day)
+            except (ParseError, KeyError):
+                msg = (
+                    f"Failed reading element '{label}' "
+                    f"for day '{day}' at line {i}. Skipping ..."
+                )
+                self.logger.warn(msg)
+            except ValueError:  # strange value in cell
+                msg = f"Failed computing a value for day '{day}' at row {i}"
+                self.logger.warn(msg)
+
+    # pylint: enable=W4902, R0914, R0912
+
+    def _create_angstrom(self):
+        """Find and assign Angstrom coefficients A and B"""
+        # pylint: disable=C0103
+        self.angstA, self.angstB = estimate_angstrom()
+
+    def _load_cache_file(self, csv_fname):
+        cache_filename = self._find_cache_file(csv_fname)
+        if cache_filename is None:
+            return False
+        self._load(cache_filename)
+        return True
+
+    def _find_cache_file(self, csv_fname):
+        """Try to find a cache file for file name
+
+        Returns None if the cache file does not exist, else it returns the full
+        path to the cache file.
+        """
+        cache_filename = self._get_cache_filename(csv_fname)
+        if os.path.exists(cache_filename):
+            cache_date = os.stat(cache_filename).st_mtime
+            csv_date = os.stat(csv_fname).st_mtime
+            if cache_date > csv_date:  # cache is more recent then CSV file
+                return cache_filename
+
+        return None
+
+    def _get_cache_filename(self, csv_fname):
+        """Constructs the filename used for cache files given csv_fname"""
+        basename = os.path.basename(csv_fname)
+        filename, _ = os.path.splitext(basename)
+
+        tmp = f"{self.__class__.__name__}_{filename}.cache"
+        # pylint: disable=E1101
+        cache_filename = os.path.join(settings.METEO_CACHE_DIR, tmp)
+        # pylint: enable=E1101
+        return cache_filename
+
+    def _write_cache_file(self, csv_fname):
+        cache_filename = self._get_cache_filename(csv_fname)
+        try:
+            self._dump(cache_filename)
+        except (IOError, EnvironmentError) as e:
+            msg = (
+                f"Failed to write cache to file '{cache_filename}' due to: {e}"
+            )
+            self.logger.warning(msg)
+
+
 class Era5WeatherDataProvider(WeatherDataProvider):
     """
     Class based on the pcse.fileinput.CSVWeatherDataProvider in WOFOST
@@ -725,7 +990,7 @@ class Era5WeatherDataProvider(WeatherDataProvider):
         location,
         dateformat="%Y-%m-%d",
         ETmodel="PM",
-        force_reload=False,
+        force_reload=True,
     ):
         WeatherDataProvider.__init__(self)
         self.longitude, self.latitude = self._find_coordinates(location)

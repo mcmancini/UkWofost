@@ -1021,7 +1021,7 @@ def load_parcel_from_db(parcel_gid, db=None):
         sql = f"""
             SELECT * FROM parcels.parcels WHERE gid = '{parcel_gid}';
         """
-        conn = db.connection()
+        conn = db.connection().connection
         sql_return = gpd.read_postgis(sql, conn, geom_col="geom")
         # cur.execute(sql)
         # sql_return = cur.fetchall()
